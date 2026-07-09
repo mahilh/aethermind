@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+:root {
+  --font-serif: 'EB Garamond', 'Georgia', 'Palatino Linotype', serif;
+  --color-gold: #D4AF37;
+  --color-purple: #7B2FBE;
+  --color-text: #E8D9C0;
+  --color-muted: rgba(232,217,192,0.4);
+  --color-bg: #050510;
+}
+
+* { box-sizing: border-box; }
+body { margin:0; background:var(--color-bg); color:var(--color-text); font-family:var(--font-serif); -webkit-font-smoothing:antialiased; }
+button { font-family:var(--font-serif); }
+input  { font-family:var(--font-serif); }
+
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(212,175,55,0.3); border-radius:2px; }
+
+@keyframes pulse { 0%,100%{opacity:.8;transform:scale(1)} 50%{opacity:1;transform:scale(1.06)} }
+@keyframes tw    { from{opacity:.12} to{opacity:.85} }
+@keyframes spin  { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+@keyframes glow  { 0%,100%{box-shadow:0 0 10px var(--color-gold)} 50%{box-shadow:0 0 30px var(--color-gold)} }
