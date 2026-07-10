@@ -2,8 +2,8 @@
 
 **Esoteric Consciousness Trivia RPG** · 12 Realms · AI-powered questions · Real-time global leaderboard
 
-**Live:** https://aethermind.vercel.app  
-**Supabase:** https://gsogycwtllthrenqaxlh.supabase.co  
+**Live:** https://aethermind-five.vercel.app
+**Supabase:** https://gsogycwtllthrenqaxlh.supabase.co
 **GitHub:** https://github.com/mahilh/aethermind
 
 ## Stack
@@ -14,7 +14,6 @@ React 19 · Vite · Tailwind v4 · Zustand + Immer · Supabase realtime · Anthr
 git clone https://github.com/mahilh/aethermind.git
 cd aethermind && npm install
 cp .env.example .env.local
-# Fill .env.local with Supabase keys (see .env.example)
 npm run dev
 ```
 
