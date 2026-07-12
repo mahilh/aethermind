@@ -6,6 +6,7 @@ import { useGameStore } from './store/useGameStore'
 import { fetchQuestionsForRealm, saveScore, getLeaderboard, subscribeLeaderboard, unsubscribeLeaderboard } from './lib/supabase'
 import { selectQuestion, formatQuestion } from './lib/questionSelector'
 import HomeScreen from './components/HomeScreen'
+import ModeSelect from './components/ModeSelect'
 import RealmSelect from './components/RealmSelect'
 import QuizScreen from './components/QuizScreen'
 import CharacterSheet from './components/CharacterSheet'
@@ -17,7 +18,7 @@ export default function App() {
     screen, realm, question, loading, error, picked, revealed,
     sessionScore, learningCards, cardOpen, leaderboard, playerName, stats,
     setScreen, setRealm, setQuestion, setLoading, setError,
-    resetQuestion, resetSession, answerQuestion, setCardOpen, setLeaderboard,
+    resetQuestion, resetSession, answerQuestion, setCardOpen, setLeaderboard, setGameMode,
   } = useGameStore()
 
   // Realm question pool (loaded once per realm session, free Supabase reads)
@@ -70,6 +71,12 @@ export default function App() {
     pickQuestion(realmQuestions, useGameStore.getState().stats, realm, seenIds)
   }, [realmQuestions, realm, seenIds, pickQuestion])
 
+  // ── Mode chosen → store it, then go to realm select ───────────
+  const handleModeSelect = useCallback((modeId) => {
+    setGameMode(modeId)
+    setScreen('realm-select')
+  }, [setGameMode, setScreen])
+
   // ── Answer handler ────────────────────────────────────────────
   const handleAnswer = useCallback((idx) => {
     answerQuestion(idx)
@@ -99,7 +106,8 @@ export default function App() {
   }
 
   // ── Screen routing ────────────────────────────────────────────
-  if (screen === 'home')         return <HomeScreen stats={stats} playerName={playerName} onBegin={() => setScreen('realm-select')} />
+  if (screen === 'home')         return <HomeScreen stats={stats} playerName={playerName} onBegin={() => setScreen('mode-select')} />
+  if (screen === 'mode-select')  return <ModeSelect onModeSelect={handleModeSelect} nav={nav} />
   if (screen === 'realm-select') return <RealmSelect stats={stats} learningCardsCount={learningCards.length} onPick={handleSelectRealm} nav={nav} />
   if (screen === 'quiz')         return <QuizScreen realm={realm} question={question} loading={loading} error={error} picked={picked} revealed={revealed} sessionScore={sessionScore} stats={stats} learningCardsCount={learningCards.length} onAnswer={handleAnswer} onNext={handleNext} onRetry={() => pickQuestion(realmQuestions, stats, realm, seenIds)} nav={nav} />
   if (screen === 'character')    return <CharacterSheet stats={stats} onBack={() => setScreen(realm ? 'quiz' : 'realm-select')} />
