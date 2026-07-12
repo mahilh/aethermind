@@ -1,4 +1,4 @@
-// AetherMind — HomeScreen · T1 LANE
+// AetherMind: HomeScreen · T1 LANE
 // Props: { stats, playerName, onBegin }
 // T1: implement cosmic portal design (see T1_BOOT.md Task 1)
 // Stars from STARS constant · gold ◉ portal · gradient title · player name input · XP bar
@@ -60,7 +60,7 @@ export default function HomeScreen({ stats, playerName, onBegin }) {
         <div style={{height:'5px',background:'rgba(255,255,255,0.08)',borderRadius:'3px',overflow:'hidden',marginBottom:'0.4rem'}}>
           <div style={{height:'100%',borderRadius:'3px',background:'linear-gradient(90deg,#7B2FBE,#D4AF37)',width:xpPct+'%',transition:'width 0.6s ease'}}/>
         </div>
-        <p style={{fontSize:'0.62rem',color:'rgba(232,217,192,0.28)',marginBottom:'1.5rem',letterSpacing:'0.08em'}}>{stats.xp}/{stats.xpToNext} XP — Level {stats.level+1}</p>
+        <p style={{fontSize:'0.62rem',color:'rgba(232,217,192,0.28)',marginBottom:'1.5rem',letterSpacing:'0.08em'}}>{stats.xp}/{stats.xpToNext} XP, Level {stats.level+1}</p>
         {/* Player name */}
         <input
           type="text" value={name} maxLength={20}
@@ -76,7 +76,7 @@ export default function HomeScreen({ stats, playerName, onBegin }) {
           ENTER THE AETHERMIND
         </button>
         <p style={{marginTop:'1.8rem',fontSize:'0.75rem',color:'rgba(232,217,192,0.28)',lineHeight:'1.75',fontStyle:'italic'}}>
-          "Not how much you know — but how clearly you see the nature of what you know."
+          "Not how much you know, but how clearly you see the nature of what you know."
         </p>
       </div>
     </div>

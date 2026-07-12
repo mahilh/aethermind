@@ -1,4 +1,4 @@
-// AetherMind — WisdomVault (Learning Cards) · T1 LANE
+// AetherMind: WisdomVault (Learning Cards) · T1 LANE
 // Props: { cards, cardOpen, onToggle, onBack }
 import { STARS } from '../lib/constants'
 

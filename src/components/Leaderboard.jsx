@@ -1,4 +1,4 @@
-// AetherMind — Leaderboard · T1 LANE
+// AetherMind: Leaderboard · T1 LANE
 // Props: { leaderboard, playerName, onBack }
 import { STARS } from '../lib/constants'
 

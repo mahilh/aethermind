@@ -1,4 +1,4 @@
-// AetherMind — Main App Shell (Supabase-powered questions)
+// AetherMind: Main App Shell (Supabase-powered questions)
 // T1 LANE: this file + all components
 // T2 provides store + lib (read only for T1)
 import { useEffect, useCallback, useState } from 'react'
@@ -20,7 +20,7 @@ export default function App() {
     resetQuestion, resetSession, answerQuestion, setCardOpen, setLeaderboard,
   } = useGameStore()
 
-  // Realm question pool (loaded once per realm session — free Supabase reads)
+  // Realm question pool (loaded once per realm session, free Supabase reads)
   const [realmQuestions, setRealmQuestions] = useState([])
   const [seenIds, setSeenIds] = useState([])
 

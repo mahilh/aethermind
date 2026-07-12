@@ -1,4 +1,4 @@
-// AetherMind — CharacterSheet · T1 LANE
+// AetherMind: CharacterSheet · T1 LANE
 // Props: { stats, onBack }
 import { ATTRS, REALMS, STARS } from '../lib/constants'
 

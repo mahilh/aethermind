@@ -1,4 +1,4 @@
-// AetherMind — RealmSelect · T1 LANE
+// AetherMind: RealmSelect · T1 LANE
 // Props: { stats, learningCardsCount, onPick, nav }
 import { REALMS, STARS } from '../lib/constants'
 
