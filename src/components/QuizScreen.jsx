@@ -7,6 +7,20 @@ const F='"EB Garamond","Georgia",serif',TEXT='#E8D9C0',MUTED='rgba(232,217,192,0
 const navBtn={background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'8px',padding:'0.38rem 0.85rem',color:MUTED,cursor:'pointer',fontSize:'0.76rem',fontFamily:F}
 const xpBarOuter={height:'5px',background:'rgba(255,255,255,0.08)',borderRadius:'3px',overflow:'hidden'}
 
+// image_url comes from am_questions, where anon holds UPDATE (migration 003) and
+// the RLS policy is using(true), so the value is attacker writable. Only pass a
+// DB image URL to <img src> when it is https and from a trusted host; otherwise
+// fall through to getImageUrl(). Defense in depth: the real fix is the grant.
+const SUPABASE_HOST=(()=>{try{return new URL(import.meta.env.VITE_SUPABASE_URL).hostname}catch{return null}})()
+const IMG_HOSTS=new Set(['images.unsplash.com','source.unsplash.com','picsum.photos',SUPABASE_HOST].filter(Boolean))
+function safeImageUrl(raw){
+  if(!raw) return null
+  try{
+    const u=new URL(raw)
+    return u.protocol==='https:'&&IMG_HOSTS.has(u.hostname)?u.href:null
+  }catch{return null}
+}
+
 function Stars({color}) {
   return <div style={{position:'absolute',inset:0,pointerEvents:'none'}}>{STARS.map((s,i)=>(
     <div key={i} style={{position:'absolute',left:s.x+'%',top:s.y+'%',width:s.s+'px',height:s.s+'px',background:'#fff',borderRadius:'50%',opacity:s.o,animation:`tw ${3+(i%5)}s ${s.d}s infinite alternate`}}/>
@@ -73,7 +87,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
               flexShrink: 0,
             }}>
               <img
-                src={question.image_url || getImageUrl(question, realm?.name || '')}
+                src={safeImageUrl(question.image_url) || getImageUrl(question, realm?.name || '')}
                 alt=""
                 style={{
                   width: '100%',
