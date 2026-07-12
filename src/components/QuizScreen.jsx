@@ -1,9 +1,13 @@
 // AetherMind: QuizScreen · T1 LANE
 // Props: { realm, question, loading, error, picked, revealed, sessionScore, stats, learningCardsCount, onAnswer, onNext, onRetry, nav }
+import { useState, useEffect, useRef } from 'react'
 import { KNOWLEDGE_TYPES, STARS } from '../lib/constants'
 import { getImageUrl } from '../lib/questionSelector'
+import { useGameStore } from '../store/useGameStore'
 
 const F='"EB Garamond","Georgia",serif',TEXT='#E8D9C0',MUTED='rgba(232,217,192,0.4)'
+const PIXEL="'Press Start 2P','Courier New',monospace"
+const fmtTime=(s)=>`0:${String(Math.max(0,s)).padStart(2,'0')}`
 const navBtn={background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'8px',padding:'0.38rem 0.85rem',color:MUTED,cursor:'pointer',fontSize:'0.76rem',fontFamily:F}
 const xpBarOuter={height:'5px',background:'rgba(255,255,255,0.08)',borderRadius:'3px',overflow:'hidden'}
 
@@ -28,6 +32,48 @@ function Stars({color}) {
 }
 
 export default function QuizScreen({ realm, question, loading, error, picked, revealed, sessionScore, stats, learningCardsCount, onAnswer, onNext, onRetry, nav }) {
+  const gameMode = useGameStore(s => s.gameMode)
+  const livesRemaining = useGameStore(s => s.livesRemaining)
+  const isSpeed = gameMode === 'speed'
+  const [timeLeft, setTimeLeft] = useState(30)
+  const barRef = useRef(null)
+  const timedOutRef = useRef(false)
+
+  // Speed Oracle: on each new question, reset the timer + bar and arm a real 30s deadline; freeze the bar on reveal.
+  // The deadline is a setTimeout tied to THIS question's effect lifecycle, so it can never fire on a stale
+  // timeLeft carried over from the previous question (which caused a cascade of instant auto-wrong answers).
+  useEffect(() => {
+    if (!isSpeed) return
+    const bar = barRef.current
+    if (revealed) {
+      if (bar) { const w = getComputedStyle(bar).width; bar.style.transition = 'none'; bar.style.width = w }
+      return
+    }
+    if (!question) return
+    timedOutRef.current = false
+    setTimeLeft(30)
+    if (bar) {
+      bar.style.transition = 'none'; bar.style.width = '100%'
+      void bar.offsetWidth
+      bar.style.transition = 'width 30s linear'; bar.style.width = '0%'
+    }
+    const ticker = setInterval(() => setTimeLeft(t => (t <= 1 ? 0 : t - 1)), 1000)
+    const deadline = setTimeout(() => {
+      clearInterval(ticker)
+      setTimeLeft(0)
+      timedOutRef.current = true
+      onAnswer(-1)
+    }, 30000)
+    return () => { clearInterval(ticker); clearTimeout(deadline) }
+  }, [question, isSpeed, revealed, onAnswer])
+
+  // Speed Oracle: after a timeout reveal, advance to the next question after 2s
+  useEffect(() => {
+    if (!isSpeed || !revealed || !timedOutRef.current) return
+    const adv = setTimeout(() => onNext(), 2000)
+    return () => clearTimeout(adv)
+  }, [revealed, isSpeed, onNext])
+
   if (!realm) return null
   const ok = revealed && picked === question?.correct_index
   const kt = question ? (KNOWLEDGE_TYPES[question.knowledge_type] || KNOWLEDGE_TYPES.philosophical) : null
@@ -41,7 +87,10 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.2rem'}}>
           <button style={navBtn} onClick={nav.realms}>← Realms</button>
           <span style={{color:realm.color,fontSize:'0.84rem',filter:`drop-shadow(0 0 8px ${realm.color}60)`}}>{realm.glyph} {realm.name}</span>
-          <div style={{display:'flex',gap:'0.5rem'}}>
+          <div style={{display:'flex',gap:'0.5rem',alignItems:'center'}}>
+            {gameMode==='survival'&&<span style={{display:'inline-flex',alignItems:'center',gap:'2px',fontSize:'0.95rem',marginRight:'0.1rem'}} title={`${livesRemaining} lives`}>
+              {[0,1,2].map(i=><span key={i} style={{color:i<livesRemaining?'#F87171':'rgba(232,217,192,0.22)'}}>{i<livesRemaining?'♥':'♡'}</span>)}
+            </span>}
             {learningCardsCount>0&&<button style={{...navBtn,color:'#FB923C'}} onClick={nav.cards}>📚 {learningCardsCount}</button>}
             <button style={{...navBtn,color:'#D4AF37'}} onClick={nav.character}>◉ Lv.{stats.level}</button>
             <button style={{...navBtn,color:'#6EE7B7'}} onClick={nav.leaderboard}>🌍</button>
@@ -68,6 +117,15 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
         </div>}
         {/* Question */}
         {question&&!loading&&<>
+          {/* Speed Oracle timer (between stats row and knowledge badge) */}
+          {isSpeed&&<div style={{marginBottom:'1rem'}}>
+            <div style={{display:'flex',justifyContent:'flex-end',marginBottom:'0.4rem'}}>
+              <span style={{fontFamily:PIXEL,fontSize:'9px',color:'#D4AF37',letterSpacing:'0.5px'}}>{fmtTime(timeLeft)}</span>
+            </div>
+            <div style={{height:'6px',background:'rgba(255,255,255,0.07)',borderRadius:'3px',overflow:'hidden'}}>
+              <div ref={barRef} style={{height:'100%',background:'#D4AF37',borderRadius:'3px'}}/>
+            </div>
+          </div>}
           {/* Knowledge badge */}
           {kt&&<div style={{marginBottom:'0.9rem'}}>
             <span style={{display:'inline-flex',alignItems:'center',gap:'0.4rem',padding:'0.18rem 0.72rem',borderRadius:'20px',background:`${kt.color}18`,border:`1px solid ${kt.color}40`,fontSize:'0.63rem',color:kt.color}}>
