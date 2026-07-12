@@ -1,4 +1,4 @@
-// AetherMind — Core constants · T2 LANE
+// AetherMind · Core constants · T2 LANE
 // Realms linked to books in Drive: 1eUnI4kX4joj_EwRy6GTdoLJav7AwobbF
 
 export const REALMS = [
@@ -46,7 +46,15 @@ export const ATTRS = [
   { key:'compassion',  label:'Compassion',     color:'#FB923C' },
 ]
 
-// Deterministic star positions — never Math.random() (it changes every render)
+export const GAME_MODES = [
+  { id:'classic',  label:'Classic Quest',  icon:'◉', desc:'Adaptive · unlimited time',   xpMult:1.0 },
+  { id:'speed',    label:'Speed Oracle',   icon:'⚡', desc:'30 seconds per question',     xpMult:1.5 },
+  { id:'survival', label:'Survival Run',   icon:'♥', desc:'3 lives · wrong = lose one',   xpMult:2.0 },
+  { id:'gauntlet', label:'Realm Gauntlet', icon:'⚔', desc:'10 questions · one realm',     xpMult:2.5 },
+  { id:'blind',    label:'Blind Seer',     icon:'◈', desc:'No knowledge badge',           xpMult:3.0 },
+]
+
+// Deterministic star positions: never Math.random() (it changes every render)
 export const STARS = Array.from({length:70}, (_,i) => ({
   x: (i*137.5)%100, y: (i*97.3)%100,
   s: 1+(i%3), o: 0.15+(i%6)*0.1, d: (i%8)*0.6,

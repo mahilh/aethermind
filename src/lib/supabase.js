@@ -1,11 +1,11 @@
-// AetherMind — Supabase client + leaderboard + questions
+// AetherMind, Supabase client + leaderboard + questions
 // T2 LANE · Table: am_scores (leaderboard) · am_questions (question bank)
 import { createClient } from '@supabase/supabase-js'
 
 const url = import.meta.env.VITE_SUPABASE_URL
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!url || !key) console.warn('[AetherMind] Supabase env vars missing — DB disabled')
+if (!url || !key) console.warn('[AetherMind] Supabase env vars missing, DB disabled')
 
 export const supabase = (url && key) ? createClient(url, key) : null
 
@@ -23,7 +23,7 @@ export async function fetchQuestionsForRealm(realmId) {
   return data || []
 }
 
-// Fetch a random question (no realm filter — for mixed mode)
+// Fetch a random question (no realm filter, for mixed mode)
 export async function fetchMixedQuestion(level = 1) {
   if (!supabase) return null
   const minLevel = Math.max(1, level - 5)

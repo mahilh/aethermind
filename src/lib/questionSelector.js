@@ -1,4 +1,4 @@
-// AetherMind — Adaptive Question Selector
+// AetherMind, Adaptive Question Selector
 // T2 LANE · src/lib/questionSelector.js
 // Selects questions from Supabase pool based on player level + realm accuracy
 // Images via Unsplash Source (free, no key needed)
@@ -76,7 +76,7 @@ export function formatQuestion(dbQ) {
   }
 }
 
-// ── Image URL builder (Unsplash Source — free, no key) ────────
+// ── Image URL builder (Unsplash Source, free, no key) ────────
 // Returns a consistent image URL for each question based on search terms
 export function getImageUrl(question, fallbackRealm = '') {
   const search = question?.image_search || fallbackRealm

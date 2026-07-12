@@ -1,4 +1,4 @@
-// AetherMind — Vercel Serverless API Route
+// AetherMind, Vercel Serverless API Route
 // Proxies Anthropic API calls server-side to avoid CORS
 // Env var required: ANTHROPIC_API_KEY (server-side, no VITE_ prefix)
 
@@ -7,7 +7,7 @@ function getDepth(level) {
   if (level <= 8)  return 'meaningful connections between concepts'
   if (level <= 18) return 'cross-disciplinary synthesis and hidden patterns'
   if (level <= 30) return 'advanced integration, paradoxes, and original insight'
-  return 'master level — reality modeling and the ineffable'
+  return 'master level, reality modeling and the ineffable'
 }
 
 export default async function handler(req, res) {
@@ -36,14 +36,14 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 900,
-        system: `You are the AetherMind Examiner — a deep guide for esoteric, philosophical, and scientific wisdom. Generate consciousness-expanding quiz questions. Respond ONLY with raw valid JSON. No markdown, no code fences, no preamble.`,
+        system: `You are the AetherMind Examiner, a deep guide for esoteric, philosophical, and scientific wisdom. Generate consciousness-expanding quiz questions. Respond ONLY with raw valid JSON. No markdown, no code fences, no preamble.`,
         messages: [{
           role: 'user',
           content: `Generate one multiple-choice question for AetherMind.
 
 Realm: "${realm.name}"
 Topics: ${realm.topics}
-Level: ${level} — Depth: ${getDepth(level)}
+Level: ${level}, Depth: ${getDepth(level)}
 
 Return ONLY raw JSON (no backticks):
 {

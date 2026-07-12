@@ -1,13 +1,13 @@
-// AetherMind — Question Generator · T2 LANE
+// AetherMind, Question Generator · T2 LANE
 // Calls /api/generate-question (Vercel serverless proxy) to avoid CORS
-// Anthropic API key lives server-side only — never exposed to browser
+// Anthropic API key lives server-side only, never exposed to browser
 
 function getDepth(level) {
   if (level <= 3)  return 'basic definitions and essential facts'
   if (level <= 8)  return 'meaningful connections between concepts'
   if (level <= 18) return 'cross-disciplinary synthesis and hidden patterns'
   if (level <= 30) return 'advanced integration, paradoxes, and original insight'
-  return 'master level — reality modeling and the ineffable'
+  return 'master level, reality modeling and the ineffable'
 }
 
 export async function generateQuestion(realm, level) {

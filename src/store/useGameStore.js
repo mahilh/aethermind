@@ -1,4 +1,4 @@
-// AetherMind — Global game state
+// AetherMind, Global game state
 // T2 LANE · Zustand + Immer + persist · key: am-game-v1
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
@@ -14,10 +14,12 @@ export const useGameStore = create(
   persist(
     immer((set) => ({
       // Persisted across sessions
-      playerName: '', stats: INIT, learningCards: [],
+      playerName: '', stats: INIT, learningCards: [], seenQuestions: [],
       // Session only
       screen:'home', realm:null, question:null, loading:false, error:null,
       picked:null, revealed:false, sessionScore:{c:0,t:0}, cardOpen:null, leaderboard:[],
+      // Game mode (session only, reset on reload)
+      gameMode:'classic', livesRemaining:3, gauntletCount:0, speedTimeLeft:30,
 
       setScreen: (s) => set(st => { st.screen = s }),
       setPlayerName: (n) => set(st => { st.playerName = n }),
@@ -29,6 +31,17 @@ export const useGameStore = create(
       setCardOpen: (i) => set(st => { st.cardOpen = st.cardOpen===i ? null : i }),
       resetQuestion: () => set(st => { st.question=null; st.picked=null; st.revealed=false; st.error=null }),
       resetSession: () => set(st => { st.sessionScore={c:0,t:0} }),
+
+      setGameMode: (m) => set(st => { st.gameMode = m }),
+      setLivesRemaining: (n) => set(st => { st.livesRemaining = n }),
+      loseLife: () => set(st => { st.livesRemaining = Math.max(0, st.livesRemaining - 1) }),
+      incrementGauntlet: () => set(st => { st.gauntletCount += 1 }),
+      resetGauntlet: () => set(st => { st.gauntletCount = 0 }),
+      addSeenQuestion: (id) => set(st => {
+        if (!st.seenQuestions.includes(id)) st.seenQuestions.push(id)
+        if (st.seenQuestions.length > 200) st.seenQuestions = st.seenQuestions.slice(-200)
+      }),
+      clearSeenQuestions: () => set(st => { st.seenQuestions = [] }),
 
       answerQuestion: (idx) => set(st => {
         const q=st.question, realm=st.realm
@@ -62,6 +75,6 @@ export const useGameStore = create(
         })
       }),
     })),
-    { name:'am-game-v1', partialize:(st)=>({playerName:st.playerName,stats:st.stats,learningCards:st.learningCards}) }
+    { name:'am-game-v1', partialize:(st)=>({playerName:st.playerName,stats:st.stats,learningCards:st.learningCards,seenQuestions:st.seenQuestions}) }
   )
 )
