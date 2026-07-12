@@ -5,12 +5,33 @@
 ## WHAT IS AETHERMIND
 A live real-time esoteric consciousness trivia RPG. Players pick from 12 realms of esoteric knowledge, answer adaptive questions pulled from a 120-question Supabase database, earn XP, level up, and compete on a live global leaderboard. Free to play — zero API cost per question. Built for a friend group in Karachi, deploying to Austin TX July 2026.
 
-## LIVE STATE (XRAY! 2026-07-12)
+## LIVE STATE (XRAY! 2026-07-12 · T2 CONFIRMED)
 - Site: aethermind-five.vercel.app — LIVE, UI renders correctly
 - DB: 120 questions in Supabase · 12 realms · 10 each · CONFIRMED
-- CRITICAL BUG: Supabase 401 on am_questions — questions NOT loading in production
-- ROOT CAUSE: vercel --prod was never run after adding VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to Vercel
-- T2 FIX: cd ~/Desktop/aethermind && vercel --prod (IMMEDIATE — do this before anything else)
+- VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY: IN VERCEL PRODUCTION · CONFIRMED by T2
+- Production build: 23h old · env vars ARE baked in · vercel --prod NOT needed
+- CRITICAL BUG: 401 is PostgreSQL GRANT error — anon role missing SELECT privilege
+- ROOT CAUSE (T2 confirmed via direct API test): RLS policies set but GRANT never issued
+- ERROR CODE: 42501 "permission denied for table am_questions"
+- FIX: GRANT SELECT ON public.am_questions TO anon; (Supabase SQL Editor — no redeploy)
+
+## CRITICAL LESSON — SUPABASE RLS vs GRANT (never confuse these again)
+RLS (Row Level Security) filters which ROWS are returned AFTER privilege check.
+GRANT controls whether the role can access the TABLE at all.
+You MUST have GRANT first, then RLS. RLS without GRANT = 401 every time.
+When creating any new table in AetherMind: ALWAYS run these after migrations:
+  GRANT USAGE ON SCHEMA public TO anon;
+  GRANT SELECT ON <table> TO anon;
+  GRANT INSERT ON <table> TO anon; (if users write to it)
+  GRANT UPDATE ON <table> TO anon; (if users update it)
+
+## REQUIRED GRANTS (run once in Supabase SQL Editor to fix the 401)
+GRANT USAGE ON SCHEMA public TO anon;
+GRANT SELECT ON public.am_questions TO anon;
+GRANT UPDATE ON public.am_questions TO anon;
+GRANT SELECT ON public.am_scores TO anon;
+GRANT INSERT ON public.am_scores TO anon;
+GRANT UPDATE ON public.am_scores TO anon;
 
 ## TECH STACK
 React 19 + Vite · Tailwind v4 · Zustand + Immer (persist: am-game-v1) · Supabase (realtime leaderboard + question bank) · Vercel (serverless + hosting) · Unsplash Source API (free images per question)
@@ -19,7 +40,8 @@ React 19 + Vite · Tailwind v4 · Zustand + Immer (persist: am-game-v1) · Supab
 URL: https://gsogycwtllthrenqaxlh.supabase.co
 Org: AetherMind (FREE tier · ap-south-1 · NANO compute)
 Tables: am_scores (leaderboard) · am_questions (120 questions)
-RLS: public read enabled on both tables
+RLS: public read/write enabled on both tables
+GRANTS: anon role needs SELECT/INSERT/UPDATE — see REQUIRED GRANTS above
 
 ## 12 REALMS (realm_id 1-12)
 1 Ancient Civilizations · 2 Hermetic Wisdom · 3 Gnosticism · 4 Eastern Traditions
@@ -68,9 +90,17 @@ NIGHTSAVE! = Mandatory session close · build · commit · push · lesson writte
 T1 terminal: /t1   (reads FORGE_T1.md · runs SURVEY! · awaits FORGE!)
 T2 terminal: /t2   (reads FORGE_T2.md · runs SURVEY! · awaits FORGE!)
 
-## MCP AUTHENTICATION
-If Claude Code shows "1 MCP server needs authentication": run /mcp to configure
-The GitHub MCP allows direct repo operations from terminal
+## MCP LANDSCAPE (Claude Code)
+plugin:vercel:vercel — 24 tools · deployment · env vars · logs
+plugin:supabase:supabase — needs PAT auth (not OAuth — client_id unrecognized) · go to supabase.com/dashboard/account/tokens
+plugin:playwright:playwright — 24 tools · live site testing
+github — 26 tools · push · PR · history
+context7 — 2 tools · React/Supabase docs
+
+## SUPABASE MCP AUTH
+OAuth flow fails (Unrecognized client_id). Use Personal Access Token instead:
+1. supabase.com/dashboard/account/tokens → Generate new token → name: claude-code-t2
+2. /mcp in Claude Code → select plugin:supabase → configure with PAT
 
 ## PRE-COMMIT RITUAL (both lanes)
 1. Evidence: screenshot or DB query confirming the change works
