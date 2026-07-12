@@ -42,22 +42,27 @@ export async function fetchMixedQuestion(level = 1) {
 
 // ── LEADERBOARD ───────────────────────────────────────────────
 
+// Writes go through the service-role serverless route (/api/save-score), never
+// direct anon upsert. After migration 004 anon has no am_scores write grant.
 export async function saveScore(playerName, stats) {
-  if (!supabase || !playerName?.trim()) return null
-  const { data, error } = await supabase
-    .from('am_scores')
-    .upsert({
-      player_name:    playerName.trim(),
-      level:          stats.level,
-      total_correct:  stats.correct,
-      total_answered: stats.answered,
-      xp:             stats.xp,
-      realm_scores:   stats.realm,
-      attributes:     stats.attrs,
-      updated_at:     new Date().toISOString(),
-    }, { onConflict: 'player_name' })
-  if (error) console.error('[Supabase] saveScore:', error.message)
-  return data
+  if (!playerName?.trim()) return null
+  try {
+    const res = await fetch('/api/save-score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerName: playerName.trim(), stats }),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      console.error('[AetherMind] saveScore:', err.error || res.status)
+      return null
+    }
+    const { score } = await res.json()
+    return score
+  } catch (err) {
+    console.error('[AetherMind] saveScore:', err.message)
+    return null
+  }
 }
 
 export async function getLeaderboard() {
