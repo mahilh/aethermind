@@ -1,12 +1,15 @@
--- AetherMind · Migration 004 · Security lockdown  (DRAFT - DO NOT APPLY YET)
+-- AetherMind · Migration 004 · Security lockdown  (READY - apply after prod redeploy)
 -- Run in Supabase SQL Editor once the prerequisites below are met.
 -- Idempotent: safe to run multiple times.
 --
 -- !!! APPLY-ORDER WARNING !!!
 -- This migration REMOVES anon INSERT/UPDATE on am_scores. Applying it BEFORE
--- api/save-score.js (the service-role write path) is deployed will BREAK
--- leaderboard saves. Apply 004 ONLY after save-score.js is live with
--- SUPABASE_SERVICE_KEY set in Vercel.
+-- api/save-score.js (the service-role write path) is LIVE will BREAK leaderboard
+-- saves. Prereqs (status 2026-07-15):
+--   [DONE]    SUPABASE_SERVICE_KEY set in Vercel Production (confirmed via vercel env ls)
+--   [PENDING] api/save-score.js live in prod: needs a production redeploy (prod is
+--             3 days stale). Verify GET /api/save-score returns JSON, not index.html,
+--             BEFORE applying this migration.
 --
 -- Fixes security-review findings against migration 003:
 --   [CRITICAL] am_questions UPDATE open to anon  (question / correct_idx tamperable)
