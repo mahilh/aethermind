@@ -43,6 +43,22 @@ export const useGameStore = create(
       }),
       clearSeenQuestions: () => set(st => { st.seenQuestions = [] }),
 
+      // Speed Oracle timeout: reveal the correct answer, award 0 XP, no learning
+      // card. Counts the question toward session + lifetime + realm totals (so
+      // accuracy stays honest) exactly like a wrong answer, minus XP and the card.
+      timeoutQuestion: () => set(st => {
+        const q = st.question, realm = st.realm
+        if (!q || st.picked !== null) return
+        st.picked = -1
+        st.revealed = true
+        st.sessionScore.t += 1
+        st.stats.answered += 1
+        if (realm) {
+          const rk = String(realm.id), rs = st.stats.realm[rk] || { c: 0, t: 0 }
+          st.stats.realm[rk] = { c: rs.c, t: rs.t + 1 }
+        }
+      }),
+
       answerQuestion: (idx) => set(st => {
         const q=st.question, realm=st.realm
         if (!q || st.picked!==null) return

@@ -1,7 +1,7 @@
 // AetherMind, Adaptive Question Selector
 // T2 LANE · src/lib/questionSelector.js
 // Selects questions from Supabase pool based on player level + realm accuracy
-// Images via Unsplash Source (free, no key needed)
+// Images via picsum.photos (deterministic per question id, free, no key)
 
 // ── Main selector ─────────────────────────────────────────────
 export function selectQuestion(questions, playerStats, realm, seenIds = []) {
@@ -76,16 +76,18 @@ export function formatQuestion(dbQ) {
   }
 }
 
-// ── Image URL builder (Unsplash Source, free, no key) ────────
-// Returns a consistent image URL for each question based on search terms
+// ── Image URL builder (deterministic, allowlist-safe fallback) ────
+// Returns a stable picsum image per question (same db_id always yields the same
+// image). The Unsplash Source API was retired in 2024, so source.unsplash.com
+// URLs 404. This value is used RAW in QuizScreen's <img src> (the component does
+// safeImageUrl(image_url) || getImageUrl(...)), so it must always be a safe
+// https URL. We intentionally do NOT return question.image_url here: image_url
+// priority and host validation are owned by QuizScreen.safeImageUrl, and
+// returning a raw image_url here would bypass that host allowlist.
 export function getImageUrl(question, fallbackRealm = '') {
-  const search = question?.image_search || fallbackRealm
-  if (!search) return null
-
-  const encoded = encodeURIComponent(search)
-  // sig= makes the image consistent per question (deterministic)
-  const sig = question?.db_id?.slice(0, 8) || Math.floor(Math.random() * 1000)
-  return `https://source.unsplash.com/800x450/?${encoded}&sig=${sig}`
+  const seedStr = question?.db_id?.slice(0, 8) || fallbackRealm || 'aether'
+  const seedNum = seedStr.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+  return `https://picsum.photos/seed/${seedNum}/800/450`
 }
 
 // ── Difficulty label for UI ────────────────────────────────────
