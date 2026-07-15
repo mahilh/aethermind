@@ -68,10 +68,12 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
       clearInterval(ticker)
       setTimeLeft(0)
       timedOutRef.current = true
-      onAnswer(-1)
+      // Timeout reveals the correct answer with 0 XP and no learning card (T2 store action).
+      // NOT onAnswer/answerQuestion (those award 5 XP + push a card); the 2s effect below calls onNext.
+      useGameStore.getState().timeoutQuestion()
     }, 30000)
     return () => { clearInterval(ticker); clearTimeout(deadline) }
-  }, [question, isSpeed, revealed, onAnswer])
+  }, [question, isSpeed, revealed])
 
   // Speed Oracle: after a timeout reveal, advance to the next question after 2s
   useEffect(() => {
