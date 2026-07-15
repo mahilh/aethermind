@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { KNOWLEDGE_TYPES, STARS } from '../lib/constants'
 import { getImageUrl } from '../lib/questionSelector'
 import { useGameStore } from '../store/useGameStore'
+import GameOver from './GameOver'
 
 const F='"EB Garamond","Georgia",serif',TEXT='#E8D9C0',MUTED='rgba(232,217,192,0.4)'
 const PIXEL="'Press Start 2P','Courier New',monospace"
@@ -36,6 +37,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const livesRemaining = useGameStore(s => s.livesRemaining)
   const isSpeed = gameMode === 'speed'
   const [timeLeft, setTimeLeft] = useState(30)
+  const [gameOver, setGameOver] = useState(false)
   const barRef = useRef(null)
   const timedOutRef = useRef(false)
 
@@ -74,7 +76,35 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
     return () => clearTimeout(adv)
   }, [revealed, isSpeed, onNext])
 
+  // Answer click: run the normal answer flow, then apply mode consequences.
+  // answerQuestion() does NOT touch lives, so Survival loses a heart here (public store action).
+  const handleSelect = (i) => {
+    if (revealed || !question) return
+    const correct = i === question.correct_index
+    onAnswer(i)
+    if (gameMode === 'survival' && !correct) {
+      useGameStore.getState().loseLife()
+      if (useGameStore.getState().livesRemaining <= 0) setGameOver(true)
+    }
+  }
+
   if (!realm) return null
+
+  // Survival Run: 0 hearts ends the run.
+  if (gameOver && gameMode === 'survival') return (
+    <GameOver
+      realm={realm}
+      sessionScore={sessionScore}
+      gameMode={gameMode}
+      onPlayAgain={() => {
+        const s = useGameStore.getState()
+        s.setLivesRemaining(3); s.resetSession(); s.clearSeenQuestions()
+        setGameOver(false); onRetry()
+      }}
+      onChangeMode={() => { setGameOver(false); nav.home() }}
+    />
+  )
+
   const ok = revealed && picked === question?.correct_index
   const kt = question ? (KNOWLEDGE_TYPES[question.knowledge_type] || KNOWLEDGE_TYPES.philosophical) : null
   const acc = stats.answered ? Math.round(stats.correct/stats.answered*100) : 0
@@ -169,7 +199,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
               let bdr='rgba(255,255,255,0.09)',bg='rgba(255,255,255,0.025)',tc=TEXT,cur='pointer'
               if(revealed){cur='default';if(i===question.correct_index){bdr='#4ADE80';bg='#4ADE8012';tc='#4ADE80'}else if(i===picked){bdr='#F87171';bg='#F8717112';tc='#F87171'}else{tc='rgba(232,217,192,0.3)'}}
               return (
-                <button key={i} onClick={()=>onAnswer(i)} disabled={revealed} style={{background:bg,border:`1px solid ${bdr}`,borderRadius:'10px',padding:'0.82rem 1.1rem',textAlign:'left',cursor:cur,color:tc,fontFamily:F,fontSize:'16px',lineHeight:'1.6',letterSpacing:'0.01em',display:'flex',alignItems:'center',gap:'0.8rem',transition:'all 0.16s'}}
+                <button key={i} onClick={()=>handleSelect(i)} disabled={revealed} style={{background:bg,border:`1px solid ${bdr}`,borderRadius:'10px',padding:'0.82rem 1.1rem',textAlign:'left',cursor:cur,color:tc,fontFamily:F,fontSize:'16px',lineHeight:'1.6',letterSpacing:'0.01em',display:'flex',alignItems:'center',gap:'0.8rem',transition:'all 0.16s'}}
                   onMouseEnter={e=>{if(!revealed){e.currentTarget.style.borderColor=realm.color;e.currentTarget.style.background=`${realm.color}12`}}}
                   onMouseLeave={e=>{if(!revealed){e.currentTarget.style.borderColor='rgba(255,255,255,0.09)';e.currentTarget.style.background='rgba(255,255,255,0.025)'}}}>
                   <span style={{width:'22px',height:'22px',borderRadius:'50%',border:`1px solid ${bdr}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',flexShrink:0,color:tc}}>{['A','B','C','D'][i]}</span>

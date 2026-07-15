@@ -19,6 +19,7 @@ export default function App() {
     sessionScore, learningCards, cardOpen, leaderboard, playerName, stats,
     setScreen, setRealm, setQuestion, setLoading, setError,
     resetQuestion, resetSession, answerQuestion, setCardOpen, setLeaderboard, setGameMode,
+    setLivesRemaining,
   } = useGameStore()
 
   // Realm question pool (loaded once per realm session, free Supabase reads)
@@ -58,13 +59,14 @@ export default function App() {
   const handleSelectRealm = useCallback(async (r) => {
     setRealm(r)
     resetSession()
+    setLivesRemaining(3)
     setSeenIds([])
     setScreen('quiz')
     const questions = await loadRealmQuestions(r)
     if (questions.length > 0) {
       pickQuestion(questions, stats, r, [])
     }
-  }, [setRealm, resetSession, setScreen, loadRealmQuestions, pickQuestion, stats])
+  }, [setRealm, resetSession, setLivesRemaining, setScreen, loadRealmQuestions, pickQuestion, stats])
 
   // ── Next question from existing pool ──────────────────────────
   const handleNext = useCallback(() => {
