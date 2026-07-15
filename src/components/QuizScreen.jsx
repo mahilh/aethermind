@@ -5,6 +5,7 @@ import { KNOWLEDGE_TYPES, STARS } from '../lib/constants'
 import { getImageUrl } from '../lib/questionSelector'
 import { useGameStore } from '../store/useGameStore'
 import GameOver from './GameOver'
+import GauntletComplete from './GauntletComplete'
 
 const F='"EB Garamond","Georgia",serif',TEXT='#E8D9C0',MUTED='rgba(232,217,192,0.4)'
 const PIXEL="'Press Start 2P','Courier New',monospace"
@@ -35,9 +36,12 @@ function Stars({color}) {
 export default function QuizScreen({ realm, question, loading, error, picked, revealed, sessionScore, stats, learningCardsCount, onAnswer, onNext, onRetry, nav }) {
   const gameMode = useGameStore(s => s.gameMode)
   const livesRemaining = useGameStore(s => s.livesRemaining)
+  const gauntletCount = useGameStore(s => s.gauntletCount)
   const isSpeed = gameMode === 'speed'
+  const isGauntlet = gameMode === 'gauntlet'
   const [timeLeft, setTimeLeft] = useState(30)
   const [gameOver, setGameOver] = useState(false)
+  const [gauntletDone, setGauntletDone] = useState(false)
   const barRef = useRef(null)
   const timedOutRef = useRef(false)
 
@@ -77,7 +81,8 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   }, [revealed, isSpeed, onNext])
 
   // Answer click: run the normal answer flow, then apply mode consequences.
-  // answerQuestion() does NOT touch lives, so Survival loses a heart here (public store action).
+  // answerQuestion() touches neither lives nor gauntlet count, so both are driven here
+  // via the public store actions (loseLife / incrementGauntlet).
   const handleSelect = (i) => {
     if (revealed || !question) return
     const correct = i === question.correct_index
@@ -85,6 +90,10 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
     if (gameMode === 'survival' && !correct) {
       useGameStore.getState().loseLife()
       if (useGameStore.getState().livesRemaining <= 0) setGameOver(true)
+    }
+    if (gameMode === 'gauntlet' && correct) {
+      useGameStore.getState().incrementGauntlet()
+      if (useGameStore.getState().gauntletCount >= 10) setGauntletDone(true)
     }
   }
 
@@ -102,6 +111,20 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
         setGameOver(false); onRetry()
       }}
       onChangeMode={() => { setGameOver(false); nav.home() }}
+    />
+  )
+
+  // Realm Gauntlet: 10 cleared ends the trial.
+  if (gauntletDone && gameMode === 'gauntlet') return (
+    <GauntletComplete
+      realm={realm}
+      sessionScore={sessionScore}
+      onForgeAgain={() => {
+        const s = useGameStore.getState()
+        s.resetGauntlet(); s.resetSession(); s.clearSeenQuestions()
+        setGauntletDone(false); onRetry()
+      }}
+      onChooseRealm={() => { setGauntletDone(false); nav.realms() }}
     />
   )
 
@@ -147,6 +170,15 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
         </div>}
         {/* Question */}
         {question&&!loading&&<>
+          {/* Realm Gauntlet progress (Q x / 10) */}
+          {isGauntlet&&<div style={{marginBottom:'1rem'}}>
+            <div style={{display:'flex',justifyContent:'flex-end',marginBottom:'0.4rem'}}>
+              <span style={{fontFamily:PIXEL,fontSize:'7px',color:'#D4AF37',letterSpacing:'0.5px'}}>Q {Math.min(gauntletCount+1,10)} / 10</span>
+            </div>
+            <div style={{height:'3px',background:'rgba(255,255,255,0.07)',borderRadius:'3px',overflow:'hidden'}}>
+              <div style={{height:'100%',background:'#D4AF37',borderRadius:'3px',width:`${Math.min(gauntletCount,10)/10*100}%`,transition:'width 0.4s ease'}}/>
+            </div>
+          </div>}
           {/* Speed Oracle timer (between stats row and knowledge badge) */}
           {isSpeed&&<div style={{marginBottom:'1rem'}}>
             <div style={{display:'flex',justifyContent:'flex-end',marginBottom:'0.4rem'}}>
