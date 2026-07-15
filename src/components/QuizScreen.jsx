@@ -188,8 +188,8 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
               <div ref={barRef} style={{height:'100%',background:'#D4AF37',borderRadius:'3px'}}/>
             </div>
           </div>}
-          {/* Knowledge badge */}
-          {kt&&<div style={{marginBottom:'0.9rem'}}>
+          {/* Knowledge badge (hidden in Blind Seer: the mystery is the mode) */}
+          {gameMode!=='blind'&&kt&&<div style={{marginBottom:'0.9rem'}}>
             <span style={{display:'inline-flex',alignItems:'center',gap:'0.4rem',padding:'0.18rem 0.72rem',borderRadius:'20px',background:`${kt.color}18`,border:`1px solid ${kt.color}40`,fontSize:'0.63rem',color:kt.color}}>
               {kt.stars} {kt.label}
             </span>
@@ -221,8 +221,8 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
               />
             </div>
           )}
-          {/* Question text */}
-          <div style={{background:'rgba(255,255,255,0.03)',border:`1px solid ${realm.color}30`,borderRadius:'14px',padding:'1.5rem',marginBottom:'1rem',fontSize:'20px',lineHeight:'1.7'}}>
+          {/* Question text (Blind Seer: subtle purple tint replaces the knowledge cue) */}
+          <div style={{background:gameMode==='blind'?'rgba(123,47,190,0.06)':'rgba(255,255,255,0.03)',border:`1px solid ${realm.color}30`,borderRadius:'14px',padding:'1.5rem',marginBottom:'1rem',fontSize:'20px',lineHeight:'1.7'}}>
             {question.question}
           </div>
           {/* Options */}
