@@ -226,6 +226,11 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
             <button style={{...navBtn,color:'#6EE7B7'}} onClick={nav.leaderboard}>🌍</button>
           </div>
         </div>
+        {/* Realm hero banner (image behind a top-light/bottom-dark gradient, name bottom-left) */}
+        <div style={{width:'100%',height:'120px',borderRadius:'10px',overflow:'hidden',marginBottom:'12px',position:'relative',flexShrink:0,backgroundImage:realm?.imageUrl?`url(${realm.imageUrl})`:'linear-gradient(135deg,#0A0A1A 0%,#150A2B 100%)',backgroundSize:'cover',backgroundPosition:'center'}}>
+          <div aria-hidden="true" style={{position:'absolute',inset:0,background:'linear-gradient(to bottom,rgba(4,4,10,0.2),rgba(4,4,10,0.9))'}}/>
+          <span style={{position:'absolute',bottom:'10px',left:'14px',fontFamily:'"Press Start 2P",monospace',fontSize:'9px',color:'#D4AF37',letterSpacing:'2px',zIndex:1}}>{realm?.name?.toUpperCase()}</span>
+        </div>
         {/* Session stats (streak badge slots between SESSION and TOTAL XP when currentStreak >= 3) */}
         <div style={{display:'flex',gap:'0.7rem',marginBottom:'1.2rem'}}>
           {(() => {
