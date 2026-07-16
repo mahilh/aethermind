@@ -77,7 +77,7 @@ export const useGameStore = create(
         st.picked=idx; st.revealed=true
         const ok = idx===q.correct_index
         st.sessionScore.t+=1; if(ok) st.sessionScore.c+=1
-        const xpGain = ok ? 15+st.stats.level*3 : 5
+        const xpGain = ok ? 15+st.stats.level*3 : 0
         const newXP = st.stats.xp+xpGain
         const lvlUp = newXP>=st.stats.xpToNext
         st.stats.xp = lvlUp ? newXP-st.stats.xpToNext : newXP
