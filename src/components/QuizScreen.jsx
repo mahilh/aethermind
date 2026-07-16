@@ -44,6 +44,8 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const [gauntletDone, setGauntletDone] = useState(false)
   const [showXpPop, setShowXpPop] = useState(false)
   const [xpEarned, setXpEarned] = useState(0)
+  const [displayXp, setDisplayXp] = useState(stats.xp)
+  const prevXpRef = useRef(stats.xp)
   const barRef = useRef(null)
   const timedOutRef = useRef(false)
 
@@ -83,6 +85,21 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
     const adv = setTimeout(() => onNext(), 2000)
     return () => clearTimeout(adv)
   }, [revealed, isSpeed, onNext])
+
+  // XP counter arcade tick: animate the TOTAL XP stat from its old value to the new one over ~600ms.
+  useEffect(() => {
+    if (stats.xp === prevXpRef.current) return
+    const start = prevXpRef.current, end = stats.xp, diff = end - start
+    const steps = Math.min(Math.abs(diff), 20)
+    const interval = Math.floor(600 / steps)
+    let step = 0
+    const timer = setInterval(() => {
+      step++
+      if (step >= steps) { setDisplayXp(end); prevXpRef.current = end; clearInterval(timer) }
+      else setDisplayXp(Math.round(start + (diff * step / steps)))
+    }, interval)
+    return () => clearInterval(timer)
+  }, [stats.xp])
 
   // Answer click: run the normal answer flow, then apply mode consequences.
   // answerQuestion() touches neither lives nor gauntlet count, so both are driven here
@@ -162,9 +179,9 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
         </div>
         {/* Session stats */}
         <div style={{display:'flex',gap:'0.7rem',marginBottom:'1.2rem'}}>
-          {[{v:`${sessionScore.c}/${sessionScore.t}`,l:'SESSION',c:'#D4AF37'},{v:stats.xp+' XP',l:'TOTAL XP',c:'#9B59B6'},{v:acc+'%',l:'ACCURACY',c:realm.color}].map(({v,l,c})=>(
+          {[{v:`${sessionScore.c}/${sessionScore.t}`,l:'SESSION',c:'#D4AF37'},{v:displayXp,l:'TOTAL XP',c:'#9B59B6',pixel:true},{v:acc+'%',l:'ACCURACY',c:realm.color}].map(({v,l,c,pixel})=>(
             <div key={l} style={{flex:1,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:'14px',padding:'0.6rem',textAlign:'center'}}>
-              <div style={{color:c,fontSize:'0.98rem',fontWeight:'bold'}}>{v}</div>
+              <div style={{color:c,fontSize:pixel?'0.82rem':'0.98rem',fontWeight:'bold',fontFamily:pixel?PIXEL:undefined,letterSpacing:pixel?'0.5px':undefined}}>{v}</div>
               <div style={{fontSize:'0.58rem',color:MUTED,letterSpacing:'0.1em'}}>{l}</div>
             </div>
           ))}
