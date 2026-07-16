@@ -1,7 +1,7 @@
 // AetherMind: Main App Shell (Supabase-powered questions)
 // T1 LANE: this file + all components
 // T2 provides store + lib (read only for T1)
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useState, useRef } from 'react'
 import { useGameStore } from './store/useGameStore'
 import { fetchQuestionsForRealm, saveScore, getLeaderboard, subscribeLeaderboard, unsubscribeLeaderboard } from './lib/supabase'
 import { selectQuestion, formatQuestion } from './lib/questionSelector'
@@ -25,6 +25,11 @@ export default function App() {
   // Realm question pool (loaded once per realm session, free Supabase reads)
   const [realmQuestions, setRealmQuestions] = useState([])
   const [seenIds, setSeenIds] = useState([])
+
+  // Leaderboard write throttle: track the last-saved xp + level so saveScore fires at most
+  // once per ~25 XP (protects the write path so T2 can safely rate-limit /api/save-score).
+  const lastSavedXpRef = useRef(0)
+  const lastSavedLevelRef = useRef(0)
 
   // ── Load questions from Supabase for realm ────────────────────
   const loadRealmQuestions = useCallback(async (r) => {
@@ -80,14 +85,31 @@ export default function App() {
     setScreen('realm-select')
   }, [setGameMode, setScreen])
 
+  // ── Save score, debounced to every ~25 XP ─────────────────────
+  // stats.xp wraps DOWN on level-up, so a raw xp diff alone would stall saves after leveling;
+  // a level increase also triggers a save. maxStreak (top-level session state) rides along for
+  // the streak leaderboard. force=true is used at session end to guarantee the final stats land.
+  const persistScore = useCallback((force = false) => {
+    if (!playerName) return
+    const s = useGameStore.getState()
+    const xp = s.stats?.xp || 0
+    const level = s.stats?.level || 1
+    if (force || level > lastSavedLevelRef.current || xp - lastSavedXpRef.current >= 25) {
+      saveScore(playerName, { ...s.stats, maxStreak: s.maxStreak || 0 }).catch(console.error)
+      lastSavedXpRef.current = xp
+      lastSavedLevelRef.current = level
+    }
+  }, [playerName])
+
   // ── Answer handler ────────────────────────────────────────────
   const handleAnswer = useCallback((idx) => {
     answerQuestion(idx)
-    if (playerName) {
-      const updated = useGameStore.getState().stats
-      saveScore(playerName, updated).catch(console.error)
-    }
-  }, [answerQuestion, playerName])
+    persistScore(false)
+  }, [answerQuestion, persistScore])
+
+  // ── Session end (Survival GameOver / Gauntlet complete): force a final save so the last
+  // sub-25 XP and the run's maxStreak always reach the leaderboard. ───────────────────────
+  const handleSessionEnd = useCallback(() => { persistScore(true) }, [persistScore])
 
   // ── Leaderboard realtime subscription ─────────────────────────
   useEffect(() => {
@@ -112,7 +134,7 @@ export default function App() {
   if (screen === 'home')         return <HomeScreen stats={stats} playerName={playerName} onBegin={() => setScreen('mode-select')} />
   if (screen === 'mode-select')  return <ModeSelect onModeSelect={handleModeSelect} nav={nav} />
   if (screen === 'realm-select') return <RealmSelect stats={stats} learningCardsCount={learningCards.length} onPick={handleSelectRealm} nav={nav} />
-  if (screen === 'quiz')         return <QuizScreen realm={realm} question={question} loading={loading} error={error} picked={picked} revealed={revealed} sessionScore={sessionScore} stats={stats} learningCardsCount={learningCards.length} onAnswer={handleAnswer} onNext={handleNext} onRetry={() => pickQuestion(realmQuestions, stats, realm, seenIds)} nav={nav} />
+  if (screen === 'quiz')         return <QuizScreen realm={realm} question={question} loading={loading} error={error} picked={picked} revealed={revealed} sessionScore={sessionScore} stats={stats} learningCardsCount={learningCards.length} onAnswer={handleAnswer} onNext={handleNext} onRetry={() => pickQuestion(realmQuestions, stats, realm, seenIds)} onSessionEnd={handleSessionEnd} nav={nav} />
   if (screen === 'character')    return <CharacterSheet stats={stats} onBack={() => setScreen(realm ? 'quiz' : 'realm-select')} />
   if (screen === 'cards')        return <WisdomVault cards={learningCards} cardOpen={cardOpen} onToggle={setCardOpen} onBack={() => setScreen(realm ? 'quiz' : 'realm-select')} />
   if (screen === 'leaderboard')  return <Leaderboard leaderboard={leaderboard} playerName={playerName} onBack={() => setScreen('realm-select')} />

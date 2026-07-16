@@ -33,7 +33,7 @@ function Stars({color}) {
   ))}</div>
 }
 
-export default function QuizScreen({ realm, question, loading, error, picked, revealed, sessionScore, stats, learningCardsCount, onAnswer, onNext, onRetry, nav }) {
+export default function QuizScreen({ realm, question, loading, error, picked, revealed, sessionScore, stats, learningCardsCount, onAnswer, onNext, onRetry, onSessionEnd, nav }) {
   const gameMode = useGameStore(s => s.gameMode)
   const livesRemaining = useGameStore(s => s.livesRemaining)
   const gauntletCount = useGameStore(s => s.gauntletCount)
@@ -157,11 +157,11 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
     else useGameStore.getState().breakStreak()
     if (gameMode === 'survival' && !correct) {
       useGameStore.getState().loseLife()
-      if (useGameStore.getState().livesRemaining <= 0) setGameOver(true)
+      if (useGameStore.getState().livesRemaining <= 0) { setGameOver(true); onSessionEnd?.() }
     }
     if (gameMode === 'gauntlet' && correct) {
       useGameStore.getState().incrementGauntlet()
-      if (useGameStore.getState().gauntletCount >= 10) setGauntletDone(true)
+      if (useGameStore.getState().gauntletCount >= 10) { setGauntletDone(true); onSessionEnd?.() }
     }
   }
 
