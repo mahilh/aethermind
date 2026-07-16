@@ -1,7 +1,7 @@
 // AetherMind · Core constants · T2 LANE
 // Realms linked to books in Drive: 1eUnI4kX4joj_EwRy6GTdoLJav7AwobbF
 
-const STORAGE = 'https://gsogycwtllthrenqaxlh.supabase.co/storage/v1/object/public/question-images/realms'
+const STORAGE = 'https://gsogycwtllthrenqaxlh.supabase.co/storage/v1/object/public/question-images'
 
 export const REALMS = [
   { id:1,  name:'Ancient Civilizations', glyph:'𓂀', color:'#D4AF37', desc:'Egypt · Sumer · Maya · Göbekli Tepe',
