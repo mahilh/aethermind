@@ -24,15 +24,20 @@ export function setMuted(v) {
 }
 
 // Must be called from a user-gesture handler (first answer click) so the browser allows audio.
+// Called on every answer, so it also RECOVERS a context the OS suspended (mobile screen lock /
+// app switch): without the re-resume below, all SFX would go silent for the rest of the session.
 export async function initSound() {
-  if (ready) return
   try {
+    if (ready) {
+      if (ctx && ctx.state === 'suspended') await ctx.resume()
+      return
+    }
     const AC = window.AudioContext || window.webkitAudioContext
     if (!AC) return
     ctx = new AC()
     if (ctx.state === 'suspended') await ctx.resume()
     ready = true
-  } catch { ready = false }
+  } catch { /* leave ready as-is; a later gesture retries */ }
 }
 
 // one oscillator note with a fast attack + exponential decay (chiptune envelope)

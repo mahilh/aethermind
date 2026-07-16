@@ -149,6 +149,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
       prevLivesRef.current = livesRemaining
       return () => clearTimeout(t)
     }
+    setBreakingHeart(-1)   // lives refilled (PLAY AGAIN, within the 500ms window) or unchanged: never leave a heart stuck breaking
     prevLivesRef.current = livesRemaining
   }, [livesRemaining])
 
@@ -238,11 +239,11 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
         </div>
       </div>}
       <div style={{position:'relative',maxWidth:'650px',margin:'0 auto'}}>
-        {/* Nav */}
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.2rem'}}>
+        {/* Nav (wraps at narrow widths so the control cluster is never clipped by the overflow:hidden root) */}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'0.5rem',marginBottom:'1.2rem'}}>
           <button style={navBtn} onClick={nav.realms}>← Realms</button>
           <span style={{color:realm.color,fontSize:'0.84rem',filter:`drop-shadow(0 0 8px ${realm.color}60)`}}>{realm.glyph} {realm.name}</span>
-          <div style={{display:'flex',gap:'0.5rem',alignItems:'center'}}>
+          <div style={{display:'flex',gap:'0.5rem',alignItems:'center',flexWrap:'wrap',justifyContent:'flex-end'}}>
             {gameMode==='survival'&&<span style={{display:'inline-flex',alignItems:'center',gap:'3px',marginRight:'0.1rem'}} title={`${livesRemaining} lives`}>
               {[0,1,2].map(i=>{
                 const full=i<livesRemaining
