@@ -11,6 +11,19 @@ const MAX_XP = 5000
 const MAX_LEVEL = 50
 const MAX_NAME = 40
 
+// Decode the Postgres role claim from a legacy Supabase JWT key. New-format opaque
+// keys (sb_secret_..., sb_publishable_...) are not JWTs, so this returns null and
+// callers must treat null as "unknown role, allow" rather than "invalid".
+function decodeJwtRole(key) {
+  try {
+    const part = String(key).split('.')[1]
+    if (!part) return null
+    return JSON.parse(Buffer.from(part, 'base64url').toString('utf8')).role || null
+  } catch {
+    return null
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -20,6 +33,17 @@ export default async function handler(req, res) {
   const serviceKey = process.env.SUPABASE_SERVICE_KEY
   if (!url || !serviceKey) {
     return res.status(500).json({ error: 'Supabase service env vars not configured' })
+  }
+
+  // Fail fast on the classic misconfig: the anon key pasted into SUPABASE_SERVICE_KEY.
+  // The service_role bypasses RLS and grants; an anon-role key is denied every write
+  // once migration 004 revokes anon INSERT/UPDATE, surfacing as a silent 500 with
+  // "permission denied for table am_scores" (Postgres 42501). We only act on a
+  // positive anon/authenticated identification, so opaque secret keys pass through.
+  const keyRole = decodeJwtRole(serviceKey)
+  if (keyRole === 'anon' || keyRole === 'authenticated') {
+    console.error(`[AetherMind API] save-score: SUPABASE_SERVICE_KEY authenticates as "${keyRole}", not service_role. Set the service_role secret in Vercel and redeploy.`)
+    return res.status(500).json({ error: 'Server misconfigured: write key lacks privileges' })
   }
 
   const { playerName, stats } = req.body || {}
@@ -63,7 +87,9 @@ export default async function handler(req, res) {
     .single()
 
   if (error) {
-    console.error('[AetherMind API] save-score:', error.message)
+    // Log the full Postgres error (code + hint) so grant/constraint failures are
+    // diagnosable without a log dive. The client response stays generic on purpose.
+    console.error(`[AetherMind API] save-score: ${error.code || 'ERR'} ${error.message}${error.hint ? ' | hint: ' + error.hint : ''}`)
     return res.status(500).json({ error: 'Failed to save score' })
   }
 
