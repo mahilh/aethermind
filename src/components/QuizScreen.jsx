@@ -254,7 +254,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
             </div>
           )}
           {/* Question text (Blind Seer: subtle purple tint replaces the knowledge cue) */}
-          <div style={{background:gameMode==='blind'?'rgba(123,47,190,0.06)':'rgba(255,255,255,0.03)',border:`1px solid ${realm.color}30`,borderRadius:'14px',padding:'1.5rem',marginBottom:'1rem',fontFamily:'var(--font-question)',fontSize:'22px',lineHeight:'1.8',letterSpacing:'0.02em'}}>
+          <div style={{background:gameMode==='blind'?'rgba(123,47,190,0.06)':'rgba(232,217,192,0.03)',border:'1px solid rgba(212,175,55,0.08)',borderRadius:'10px',padding:'20px 22px',marginBottom:'1rem',fontFamily:'var(--font-question)',fontSize:'22px',lineHeight:'1.8',letterSpacing:'0.02em'}}>
             {question.question}
           </div>
           {/* Options */}
