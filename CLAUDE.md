@@ -5,21 +5,27 @@
 ## WHAT IS AETHERMIND
 A live real-time esoteric consciousness trivia RPG. Players pick from 12 realms of esoteric knowledge, answer adaptive questions pulled from a 120-question Supabase database, earn XP, level up, and compete on a live global leaderboard. Free to play — zero API cost per question. Built for a friend group in Karachi, deploying to Austin TX July 2026.
 
-## LIVE STATE (XRAY! 2026-07-16 · Playwright CONFIRMED)
-- Site: aethermind-five.vercel.app — LIVE, all features deployed
-- DB: 120 questions · 12 realms · 10 each · CONFIRMED
-- 004 security lockdown: APPLIED · anon has SELECT only on am_scores, column-scoped UPDATE on am_questions
-- ModeSelect: LIVE (5 modes working)
-- Speed Oracle: LIVE (timer confirmed counting 0:30 to 0:00)
-- Survival / Gauntlet / Blind Seer: LIVE
-- GameOver / GauntletComplete: LIVE
-- Images: LIVE via picsum.photos (Unsplash Source retired, picsum replaces it)
-- CRITICAL OPEN: api/save-score returns 500 — SUPABASE_URL not in serverless runtime env
-- FIX NEEDED: vercel env add SUPABASE_URL production (value: https://gsogycwtllthrenqaxlh.supabase.co) then vercel --prod
-- EM DASHES: still in DB question text — T2 SQL purge pending
+## LIVE STATE (2026-07-17 · T2 verified via anon REST + live bundle)
+CONFIRMED (DB / storage / API, verified this session):
+- Site: aethermind-five.vercel.app. DB: 120 questions, 12 realms (10 each). Leaderboard am_scores: 4 rows.
+- Leaderboard writes WORK: POST /api/save-score returns {"ok":true} (fixed via 005 service_role GRANT, raw fetch to PostgREST).
+- 004 lockdown APPLIED: anon SELECT on am_scores, counter-only UPDATE on am_questions.
+- Em dashes: 0 in DB (006 applied, verified across all 120 questions).
+- max_streak column PRESENT in am_scores (007 applied); rows all 0 until players build streaks.
+- Realm images: 12/12 live at question-images bucket ROOT (all 200); the /realms subfolder 404s. STORAGE fixed in constants.js (e4a50e7).
 
-## ANIMATION + DESIGN UPGRADE (active session 2026-07-16)
-The game is being upgraded to feel like a real arcade game:
+DEPLOYED CLIENT (confirmed in the live JS bundle):
+- All 5 modes LIVE: Classic, Speed Oracle (30s timer), Survival, Gauntlet, Blind Seer. GameOver / GauntletComplete LIVE.
+- Cinzel + Press Start 2P fonts, arcade animations (correctFlash / wrongShake / xpFloat / xpTick / fadeInUp), level-up interrupt, question container polish.
+- Streak badge (STREAK / ON FIRE / INFERNO), daily realm TODAY badge, weekly / all-time leaderboard tabs, realm card backgrounds, quiz hero banner.
+- saveScore debounced (T1 c7f4ef1): saves on level-up, every ~25 XP, and a forced save at session end; maxStreak rides along.
+
+T2 LIB / STORE (on main): getDailyRealm(), getLeaderboard(period 'all' or 'week'), currentStreak / maxStreak + incrementStreak / breakStreak (session only), timeoutQuestion breaks the streak.
+
+DEPLOY NOTE: prod is recently deployed (imageUrl fix, streak badge, daily realm all confirmed live in the bundle), but the live bundle differs from HEAD, so the newest commits may not be live yet. Rate limiting (ae2b322 + fd8efab: 50/hr per IP, hardened with x-real-ip key, bounded map, sanitized log) is api-only, so it cannot be confirmed from the client and the Vercel log / deploy APIs return 403 here. A fresh vercel --prod from HEAD (fd8efab) guarantees the rate limit and the latest UI are live. CAVEAT: 50/hr can pinch a heavy shared-NAT session; raise it (return e.n > 50 in api/save-score.js) if 429s appear.
+
+## ANIMATION + DESIGN UPGRADE (SHIPPED 2026-07-16/17, in the live bundle)
+The arcade-feel upgrade below is implemented and deployed. Kept here as the design token reference:
 
 FONT SYSTEM:
 Primary (questions answers explanations): Cinzel, Times New Roman, Georgia, serif
