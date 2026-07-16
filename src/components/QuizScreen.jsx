@@ -46,6 +46,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const [gauntletDone, setGauntletDone] = useState(false)
   const [muted, setMuted] = useState(() => isMuted())
   const [showTimeout, setShowTimeout] = useState(false)
+  const [breakingHeart, setBreakingHeart] = useState(-1)
   const [showXpPop, setShowXpPop] = useState(false)
   const [xpEarned, setXpEarned] = useState(0)
   const [xpPopKey, setXpPopKey] = useState(0)
@@ -59,6 +60,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const levelUpTimerRef = useRef(null)
   const barRef = useRef(null)
   const timedOutRef = useRef(false)
+  const prevLivesRef = useRef(livesRemaining)
 
   // Speed Oracle: on each new question, reset the timer + bar and arm a real 30s deadline; freeze the bar on reveal.
   // The deadline is a setTimeout tied to THIS question's effect lifecycle, so it can never fire on a stale
@@ -138,6 +140,17 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
     if (levelUpTimerRef.current) clearTimeout(levelUpTimerRef.current)
   }, [])
   useEffect(() => { setShowXpPop(false); setShowTimeout(false) }, [question])
+
+  // Survival: when a life is lost, break the boundary heart for 500ms, then it settles as empty.
+  useEffect(() => {
+    if (livesRemaining < prevLivesRef.current) {
+      setBreakingHeart(livesRemaining)
+      const t = setTimeout(() => setBreakingHeart(-1), 500)
+      prevLivesRef.current = livesRemaining
+      return () => clearTimeout(t)
+    }
+    prevLivesRef.current = livesRemaining
+  }, [livesRemaining])
 
   // Answer click: run the normal answer flow, then apply mode consequences.
   // answerQuestion() touches neither lives nor gauntlet count, so both are driven here
@@ -230,8 +243,12 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
           <button style={navBtn} onClick={nav.realms}>← Realms</button>
           <span style={{color:realm.color,fontSize:'0.84rem',filter:`drop-shadow(0 0 8px ${realm.color}60)`}}>{realm.glyph} {realm.name}</span>
           <div style={{display:'flex',gap:'0.5rem',alignItems:'center'}}>
-            {gameMode==='survival'&&<span style={{display:'inline-flex',alignItems:'center',gap:'2px',fontSize:'0.95rem',marginRight:'0.1rem'}} title={`${livesRemaining} lives`}>
-              {[0,1,2].map(i=><span key={i} style={{color:i<livesRemaining?'#F87171':'rgba(232,217,192,0.22)'}}>{i<livesRemaining?'♥':'♡'}</span>)}
+            {gameMode==='survival'&&<span style={{display:'inline-flex',alignItems:'center',gap:'3px',marginRight:'0.1rem'}} title={`${livesRemaining} lives`}>
+              {[0,1,2].map(i=>{
+                const full=i<livesRemaining
+                if(i===breakingHeart) return <span key={`b${i}`} style={{fontSize:'18px',color:'#FF3131',display:'inline-block',animation:'heartBreak 0.5s ease-out forwards'}}>♥</span>
+                return <span key={i} style={{fontSize:'18px',display:'inline-block',color:full?'#FF3131':'rgba(255,49,49,0.2)',animation:(full&&livesRemaining===1)?'heartPulse 0.8s ease-in-out infinite':undefined}}>{full?'♥':'♡'}</span>
+              })}
             </span>}
             {learningCardsCount>0&&<button style={{...navBtn,color:'#FB923C'}} onClick={nav.cards}>📚 {learningCardsCount}</button>}
             <button style={{...navBtn,color:'#D4AF37'}} onClick={nav.character}>◉ Lv.{stats.level}</button>
