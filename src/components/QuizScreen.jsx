@@ -149,12 +149,13 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
       if (xpPopTimerRef.current) clearTimeout(xpPopTimerRef.current)
       xpPopTimerRef.current = setTimeout(() => setShowXpPop(false), 1500)
     }
-    onAnswer(i)
     // Streak: increment on a correct answer, break on a wrong one (universal to every mode).
-    // A Speed-mode timeout is handled in the store (timeoutQuestion resets the streak), so we
-    // deliberately do not break it here (T2 store contract: single-sourced break on timeout).
+    // Done BEFORE onAnswer so the debounced saveScore inside it captures the current maxStreak
+    // (T2 contract). A Speed-mode timeout is handled in the store (timeoutQuestion resets the
+    // streak), so we deliberately do not break it here (single-sourced break on timeout).
     if (correct) useGameStore.getState().incrementStreak()
     else useGameStore.getState().breakStreak()
+    onAnswer(i)
     if (gameMode === 'survival' && !correct) {
       useGameStore.getState().loseLife()
       if (useGameStore.getState().livesRemaining <= 0) { setGameOver(true); onSessionEnd?.() }
