@@ -82,6 +82,12 @@ input  { font-family:var(--font-serif); }
   100% { transform: rotateY(0deg); }
 }
 
+/* Gold shimmer sheen for XP progress bars */
+@keyframes shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
 /* Respect reduced-motion: neutralize keyframe animations; CSS transitions (Speed timer bar) stay intact */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

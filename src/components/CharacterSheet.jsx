@@ -1,8 +1,10 @@
 // AetherMind: CharacterSheet · T1 LANE
 // Props: { stats, onBack }
 import { ATTRS, REALMS, STARS } from '../lib/constants'
+import { useGameStore } from '../store/useGameStore'
 
 const F='"EB Garamond","Georgia",serif',TEXT='#E8D9C0',MUTED='rgba(232,217,192,0.4)'
+const PIXEL="'Press Start 2P','Courier New',monospace"
 const navBtn={background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'8px',padding:'0.38rem 0.85rem',color:MUTED,cursor:'pointer',fontSize:'0.76rem',fontFamily:F}
 const card={background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:'14px',padding:'1.4rem'}
 
@@ -15,6 +17,7 @@ function Stars() {
 export default function CharacterSheet({ stats, onBack }) {
   const acc = stats.answered ? Math.round(stats.correct/stats.answered*100) : 0
   const xpPct = Math.min(100,(stats.xp/stats.xpToNext)*100)
+  const maxStreak = useGameStore(s => s.maxStreak || 0)   // session best streak (store, not persisted)
 
   return (
     <div style={{minHeight:'100vh',background:'radial-gradient(ellipse at 50% -5%,#060a22 0%,#050510 55%)',padding:'1.4rem 1.4rem 3rem',fontFamily:F,color:TEXT,position:'relative',overflow:'hidden'}}>
@@ -30,9 +33,10 @@ export default function CharacterSheet({ stats, onBack }) {
           <div style={{fontSize:'3.4rem',color:'#D4AF37',fontWeight:'bold',lineHeight:1}}>{stats.level}</div>
           <div style={{fontSize:'0.62rem',letterSpacing:'0.25em',color:MUTED,margin:'0.35rem 0 0.9rem'}}>CONSCIOUSNESS LEVEL</div>
           <div style={{height:'5px',background:'rgba(255,255,255,0.08)',borderRadius:'3px',overflow:'hidden'}}>
-            <div style={{height:'100%',borderRadius:'3px',background:'linear-gradient(90deg,#7B2FBE,#D4AF37)',width:xpPct+'%',transition:'width 0.6s ease'}}/>
+            <div style={{height:'100%',borderRadius:'3px',background:'linear-gradient(90deg,#7B2FBE,#D4AF37,#F0C040,#D4AF37,#7B2FBE)',backgroundSize:'200% 100%',animation:'shimmer 3s linear infinite',width:xpPct+'%',transition:'width 0.6s ease'}}/>
           </div>
           <div style={{fontSize:'0.62rem',color:'rgba(232,217,192,0.28)',marginTop:'0.38rem'}}>{stats.xp} / {stats.xpToNext} XP</div>
+          {maxStreak>0&&<div style={{marginTop:'0.7rem',fontFamily:PIXEL,fontSize:'9px',color:'#F59E0B',letterSpacing:'0.5px'}}>BEST STREAK: {maxStreak}</div>}
         </div>
         {/* Attributes */}
         <div style={{...card,marginBottom:'1.2rem'}}>
@@ -72,7 +76,7 @@ export default function CharacterSheet({ stats, onBack }) {
               return (
                 <div key={rid} style={{marginBottom:'0.82rem'}}>
                   <div style={{display:'flex',justifyContent:'space-between',marginBottom:'0.25rem'}}>
-                    <span style={{fontSize:'0.76rem',color:r.color}}>{r.glyph} {r.name}</span>
+                    <span style={{fontFamily:'var(--font-question)',fontSize:'12px',color:r.color}}>{r.glyph} {r.name}</span>
                     <span style={{fontSize:'0.68rem',color:pct>=70?'#4ADE80':pct>=50?'#FCD34D':'#F87171'}}>{rs.c}/{rs.t}</span>
                   </div>
                   <div style={{height:'4px',background:'rgba(255,255,255,0.08)',borderRadius:'3px',overflow:'hidden'}}>
