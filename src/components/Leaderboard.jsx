@@ -1,6 +1,8 @@
 // AetherMind: Leaderboard · T1 LANE
 // Props: { leaderboard, playerName, onBack }
+import { useState, useEffect } from 'react'
 import { STARS } from '../lib/constants'
+import { getLeaderboard } from '../lib/supabase'
 
 const F='"EB Garamond","Georgia",serif',TEXT='#E8D9C0',MUTED='rgba(232,217,192,0.4)'
 const navBtn={background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'8px',padding:'0.38rem 0.85rem',color:MUTED,cursor:'pointer',fontSize:'0.76rem',fontFamily:F}
@@ -26,6 +28,14 @@ function timeAgo(ts) {
 
 export default function Leaderboard({ leaderboard, playerName, onBack }) {
   const acc = (c,t) => t ? Math.round(c/t*100) : 0
+  const [period, setPeriod] = useState('all')
+  const [weekEntries, setWeekEntries] = useState([])
+  // 'all' uses the realtime prop from App; 'week' fetches a snapshot on demand.
+  useEffect(() => {
+    if (period !== 'week') return
+    getLeaderboard('week').then(setWeekEntries).catch(console.error)
+  }, [period])
+  const entries = period === 'week' ? weekEntries : leaderboard
 
   return (
     <div style={{minHeight:'100vh',background:'radial-gradient(ellipse at 50% -5%,#001a2e 0%,#050510 55%)',padding:'1.4rem 1.4rem 3rem',fontFamily:F,color:TEXT,position:'relative',overflow:'hidden'}}>
@@ -40,7 +50,20 @@ export default function Leaderboard({ leaderboard, playerName, onBack }) {
           <div style={{width:'60px'}}/>
         </div>
 
-        {leaderboard.length === 0 ? (
+        {/* All-time / weekly tabs */}
+        <div style={{display:'flex',gap:'8px',marginBottom:'16px',justifyContent:'center'}}>
+          {['all','week'].map(p => (
+            <button key={p} onClick={() => setPeriod(p)} style={{
+              fontFamily:'"Press Start 2P",monospace', fontSize:'9px',
+              color: period===p ? '#04040A' : '#D4AF37',
+              background: period===p ? '#D4AF37' : 'transparent',
+              border:'1px solid rgba(212,175,55,0.5)', borderRadius:'6px',
+              padding:'7px 12px', cursor:'pointer', transition:'all 0.2s ease',
+            }}>{p==='all' ? 'ALL TIME' : 'THIS WEEK'}</button>
+          ))}
+        </div>
+
+        {entries.length === 0 ? (
           <div style={{textAlign:'center',padding:'4rem 2rem',color:MUTED}}>
             <div style={{fontSize:'3.5rem',marginBottom:'1rem'}}>🌍</div>
             <div style={{lineHeight:'1.75',fontSize:'0.88rem'}}>No souls registered yet.<br/>Be the first to ascend.</div>
@@ -49,7 +72,7 @@ export default function Leaderboard({ leaderboard, playerName, onBack }) {
           <>
             {/* Top 3 */}
             <div style={{display:'flex',flexDirection:'column',gap:'0.6rem',marginBottom:'1rem'}}>
-              {leaderboard.slice(0,3).map((p,i) => {
+              {entries.slice(0,3).map((p,i) => {
                 const isMe = p.player_name === playerName
                 const borderColor = i===0?'rgba(212,175,55,0.5)':i===1?'rgba(192,192,192,0.4)':'rgba(205,127,50,0.4)'
                 const bg = i===0?'rgba(212,175,55,0.1)':i===1?'rgba(192,192,192,0.08)':'rgba(205,127,50,0.08)'
@@ -72,7 +95,7 @@ export default function Leaderboard({ leaderboard, playerName, onBack }) {
               })}
             </div>
             {/* Rest */}
-            {leaderboard.slice(3).map((p,i) => {
+            {entries.slice(3).map((p,i) => {
               const isMe = p.player_name === playerName
               const pct = acc(p.total_correct,p.total_answered)
               return (
