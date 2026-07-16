@@ -59,6 +59,22 @@ input  { font-family:var(--font-serif); }
   50%  { text-shadow: 0 0 16px #39FF14, 0 0 32px rgba(57,255,20,0.7), 0 0 48px rgba(57,255,20,0.3); }
 }
 
+/* Level-up full-screen interrupt (2s celebratory flash) */
+@keyframes levelUpScale {
+  0%   { transform: scale(0.4); opacity: 0; }
+  60%  { transform: scale(1.08); opacity: 1; }
+  80%  { transform: scale(0.97); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes levelUpFade {
+  0%, 80% { opacity: 1; }
+  100%    { opacity: 0; }
+}
+@keyframes goldPulseRing {
+  0%   { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
 /* Respect reduced-motion: neutralize keyframe animations; CSS transitions (Speed timer bar) stay intact */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

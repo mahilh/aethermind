@@ -45,10 +45,14 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const [showXpPop, setShowXpPop] = useState(false)
   const [xpEarned, setXpEarned] = useState(0)
   const [xpPopKey, setXpPopKey] = useState(0)
+  const [showLevelUp, setShowLevelUp] = useState(false)
+  const [levelUpTo, setLevelUpTo] = useState(null)
   const [displayXp, setDisplayXp] = useState(stats.xp)
   const prevXpRef = useRef(stats.xp)
   const displayXpRef = useRef(stats.xp)
   const xpPopTimerRef = useRef(null)
+  const prevLevelRef = useRef(stats.level)
+  const levelUpTimerRef = useRef(null)
   const barRef = useRef(null)
   const timedOutRef = useRef(false)
 
@@ -111,8 +115,22 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
     return () => clearInterval(timer)
   }, [stats.xp])
 
-  // XP pop hygiene: clear a pending hide-timer on unmount, and hide any lingering pop when the question changes.
-  useEffect(() => () => { if (xpPopTimerRef.current) clearTimeout(xpPopTimerRef.current) }, [])
+  // Level-up interrupt: when the level stat crosses upward, flash a full-screen LV.N overlay for 2s.
+  // prevLevelRef starts at the mounted (persisted) level, so it never fires on mount, only on a real gain.
+  useEffect(() => {
+    if (stats.level <= prevLevelRef.current) { prevLevelRef.current = stats.level; return }
+    prevLevelRef.current = stats.level
+    setLevelUpTo(stats.level)
+    setShowLevelUp(true)
+    if (levelUpTimerRef.current) clearTimeout(levelUpTimerRef.current)
+    levelUpTimerRef.current = setTimeout(() => setShowLevelUp(false), 2000)
+  }, [stats.level])
+
+  // XP pop hygiene: clear pending hide-timers on unmount, and hide any lingering pop when the question changes.
+  useEffect(() => () => {
+    if (xpPopTimerRef.current) clearTimeout(xpPopTimerRef.current)
+    if (levelUpTimerRef.current) clearTimeout(levelUpTimerRef.current)
+  }, [])
   useEffect(() => { setShowXpPop(false) }, [question])
 
   // Answer click: run the normal answer flow, then apply mode consequences.
@@ -179,6 +197,14 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   return (
     <div style={{minHeight:'100vh',background:`radial-gradient(ellipse at 50% -5%,${realm.color}18 0%,#050510 55%)`,padding:'1.25rem 1.25rem 3rem',fontFamily:F,color:TEXT,position:'relative',overflow:'hidden'}}>
       <Stars color={realm.color}/>
+      {/* Level-up interrupt: full-screen celebratory flash for 2s (pointer-transparent, decorative) */}
+      {showLevelUp&&<div aria-hidden="true" style={{position:'fixed',inset:0,zIndex:1000,background:'rgba(4,4,10,0.88)',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',animation:'levelUpFade 2s ease-out forwards',pointerEvents:'none'}}>
+        <div style={{position:'relative',textAlign:'center'}}>
+          <div style={{position:'absolute',inset:'-20px',border:'2px solid #D4AF37',borderRadius:'50%',animation:'goldPulseRing 1.5s ease-out forwards'}}/>
+          <div style={{fontFamily:PIXEL,fontSize:'clamp(0.7rem,3vw,1.1rem)',color:'#D4AF37',textShadow:'0 0 20px rgba(212,175,55,0.8)',animation:'levelUpScale 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',marginBottom:'12px'}}>LEVEL UP</div>
+          <div style={{fontFamily:PIXEL,fontSize:'clamp(1.5rem,6vw,3rem)',color:'#F0C040',textShadow:'0 0 30px rgba(240,192,64,0.9)'}}>LV.{levelUpTo}</div>
+        </div>
+      </div>}
       <div style={{position:'relative',maxWidth:'650px',margin:'0 auto'}}>
         {/* Nav */}
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.2rem'}}>
