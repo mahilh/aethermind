@@ -51,7 +51,16 @@ export default function App() {
   // ── Pick next question from loaded pool ────────────────────────
   const pickQuestion = useCallback((questions, currentStats, currentRealm, currentSeenIds) => {
     resetQuestion()
-    const dbQ = selectQuestion(questions, currentStats, currentRealm, currentSeenIds)
+    // Gauntlet needs 10 unique questions per run. selectQuestion recycles seen questions once
+    // fewer than 3 remain unseen (questionSelector line 28), causing repeats mid-run. Hard-prefer
+    // unseen here so a run never repeats until the whole realm pool is exhausted (only reachable
+    // when wrong answers push a run past the pool size, since gauntlet advances on correct only).
+    let pool = questions
+    if (useGameStore.getState().gameMode === 'gauntlet') {
+      const unseen = questions.filter(q => !currentSeenIds.includes(q.id))
+      pool = unseen.length > 0 ? unseen : questions
+    }
+    const dbQ = selectQuestion(pool, currentStats, currentRealm, currentSeenIds)
     if (!dbQ) {
       setError('All questions in this realm explored. More coming soon.')
       return
@@ -134,7 +143,7 @@ export default function App() {
   if (screen === 'home')         return <HomeScreen stats={stats} playerName={playerName} onBegin={() => setScreen('mode-select')} />
   if (screen === 'mode-select')  return <ModeSelect onModeSelect={handleModeSelect} nav={nav} />
   if (screen === 'realm-select') return <RealmSelect stats={stats} learningCardsCount={learningCards.length} onPick={handleSelectRealm} nav={nav} />
-  if (screen === 'quiz')         return <QuizScreen realm={realm} question={question} loading={loading} error={error} picked={picked} revealed={revealed} sessionScore={sessionScore} stats={stats} learningCardsCount={learningCards.length} onAnswer={handleAnswer} onNext={handleNext} onRetry={() => pickQuestion(realmQuestions, stats, realm, seenIds)} onSessionEnd={handleSessionEnd} nav={nav} />
+  if (screen === 'quiz')         return <QuizScreen realm={realm} question={question} loading={loading} error={error} picked={picked} revealed={revealed} sessionScore={sessionScore} stats={stats} learningCardsCount={learningCards.length} onAnswer={handleAnswer} onNext={handleNext} onRetry={() => { setSeenIds([]); pickQuestion(realmQuestions, stats, realm, []) }} onSessionEnd={handleSessionEnd} nav={nav} />
   if (screen === 'character')    return <CharacterSheet stats={stats} onBack={() => setScreen(realm ? 'quiz' : 'realm-select')} />
   if (screen === 'cards')        return <WisdomVault cards={learningCards} cardOpen={cardOpen} onToggle={setCardOpen} onBack={() => setScreen(realm ? 'quiz' : 'realm-select')} />
   if (screen === 'leaderboard')  return <Leaderboard leaderboard={leaderboard} playerName={playerName} onBack={() => setScreen('realm-select')} />
