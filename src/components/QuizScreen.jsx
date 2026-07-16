@@ -197,7 +197,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
         <div style={{display:'flex',gap:'0.7rem',marginBottom:'1.2rem'}}>
           {[{v:`${sessionScore.c}/${sessionScore.t}`,l:'SESSION',c:'#D4AF37'},{v:displayXp,l:'TOTAL XP',c:'#9B59B6',pixel:true},{v:acc+'%',l:'ACCURACY',c:realm.color}].map(({v,l,c,pixel})=>(
             <div key={l} style={{flex:1,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:'14px',padding:'0.6rem',textAlign:'center'}}>
-              <div style={{color:c,fontSize:pixel?'0.82rem':'0.98rem',fontWeight:'bold',fontFamily:pixel?PIXEL:undefined,letterSpacing:pixel?'0.5px':undefined}}>{v}</div>
+              <div style={{color:c,fontSize:pixel?'clamp(9px,2.4vw,0.82rem)':'0.98rem',fontWeight:'bold',fontFamily:pixel?PIXEL:undefined,letterSpacing:pixel?'0.5px':undefined}}>{v}</div>
               <div style={{fontSize:'0.58rem',color:MUTED,letterSpacing:'0.1em'}}>{l}</div>
             </div>
           ))}

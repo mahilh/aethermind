@@ -66,3 +66,10 @@ input  { font-family:var(--font-serif); }
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Mobile breakpoint anchor. Components size text in px/rem (rem is root-relative, so
+   this only nudges inherited/em text). Per-element pixel titles scale via clamp() at
+   the component level, floored at 9px so Press Start 2P never drops below legibility. */
+@media (max-width: 600px) {
+  body { font-size: 14px; }
+}

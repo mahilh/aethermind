@@ -43,7 +43,7 @@ export default function HomeScreen({ stats, playerName, onBegin }) {
         {/* Portal */}
         <div style={{fontSize:'5rem',lineHeight:1,marginBottom:'1.2rem',color:'#D4AF37',filter:'drop-shadow(0 0 24px #D4AF3770)',animation:'pulse 4s ease-in-out infinite'}}>◉</div>
         {/* Title */}
-        <h1 style={{fontSize:'clamp(1.5rem,4vw,2.3rem)',fontWeight:'bold',letterSpacing:'0.13em',marginBottom:'0.3rem',background:'linear-gradient(135deg,#D4AF37,#A855F7 80%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',margin:'0 0 0.3rem 0'}}>
+        <h1 style={{fontSize:'clamp(1.5rem,6vw,3rem)',fontWeight:'bold',letterSpacing:'0.13em',marginBottom:'0.3rem',background:'linear-gradient(135deg,#D4AF37,#A855F7 80%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',margin:'0 0 0.3rem 0'}}>
           AETHERMIND
         </h1>
         <p style={{fontSize:'0.68rem',letterSpacing:'0.3em',color:MUTED,marginBottom:'2rem'}}>MEASURE · EXPAND · TRANSCEND</p>
