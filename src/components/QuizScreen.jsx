@@ -284,11 +284,16 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
             return cells
           })()}
         </div>
-        {/* Loading */}
-        {loading&&<div style={{background:'rgba(255,255,255,0.03)',border:`1px solid ${realm.color}25`,borderRadius:'14px',padding:'4rem 2rem',textAlign:'center'}}>
-          <div style={{fontSize:'2.8rem',color:realm.color,animation:'spin 3s linear infinite',marginBottom:'1rem'}}>◉</div>
-          <div style={{fontSize:'0.72rem',letterSpacing:'0.2em',color:MUTED}}>CHANNELING QUESTION...</div>
-        </div>}
+        {/* Loading skeleton (faint gold pulse mirroring the question layout, thematic not a gray bar) */}
+        {loading&&(()=>{
+          const sk={background:'rgba(212,175,55,0.08)',borderRadius:'8px',animation:'skeletonPulse 1.5s ease-in-out infinite'}
+          return <div aria-label="Channeling question" role="status">
+            <div style={{...sk,width:'100%',height:'200px',borderRadius:'10px',marginBottom:'1.2rem'}}/>
+            <div style={{...sk,width:'92%',height:'20px',marginBottom:'0.6rem'}}/>
+            <div style={{...sk,width:'68%',height:'20px',marginBottom:'1.4rem'}}/>
+            {[0,1,2,3].map(i=><div key={i} style={{...sk,width:'100%',height:'48px',marginBottom:'0.55rem',animationDelay:`${i*0.12}s`}}/>)}
+          </div>
+        })()}
         {/* Error */}
         {error&&!loading&&<div style={{background:'rgba(248,113,113,0.08)',border:'1px solid rgba(248,113,113,0.3)',borderRadius:'14px',padding:'2rem',textAlign:'center'}}>
           <div style={{color:'#F87171',marginBottom:'1rem',fontSize:'0.88rem'}}>{error}</div>

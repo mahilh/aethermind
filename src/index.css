@@ -112,6 +112,12 @@ input  { font-family:var(--font-serif); }
   50%      { transform: translateY(-3px); }
 }
 
+/* Question loading skeleton pulse (faint gold, parchment-themed) */
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.7; }
+}
+
 /* Respect reduced-motion: neutralize keyframe animations; CSS transitions (Speed timer bar) stay intact */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
