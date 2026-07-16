@@ -6,6 +6,7 @@ import { getImageUrl } from '../lib/questionSelector'
 import { useGameStore } from '../store/useGameStore'
 import GameOver from './GameOver'
 import GauntletComplete from './GauntletComplete'
+import { initSound, playCorrect, playWrong, playLevelUp, playStreak, isMuted, setMuted as persistMuted } from './SoundEngine'
 
 const F='"EB Garamond","Georgia",serif',TEXT='#E8D9C0',MUTED='rgba(232,217,192,0.4)'
 const PIXEL="'Press Start 2P','Courier New',monospace"
@@ -43,6 +44,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const [timeLeft, setTimeLeft] = useState(30)
   const [gameOver, setGameOver] = useState(false)
   const [gauntletDone, setGauntletDone] = useState(false)
+  const [muted, setMuted] = useState(() => isMuted())
   const [showXpPop, setShowXpPop] = useState(false)
   const [xpEarned, setXpEarned] = useState(0)
   const [xpPopKey, setXpPopKey] = useState(0)
@@ -123,6 +125,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
     prevLevelRef.current = stats.level
     setLevelUpTo(stats.level)
     setShowLevelUp(true)
+    playLevelUp()   // ctx already initialized by the answer click that triggered this level-up
     if (levelUpTimerRef.current) clearTimeout(levelUpTimerRef.current)
     levelUpTimerRef.current = setTimeout(() => setShowLevelUp(false), 2000)
   }, [stats.level])
@@ -140,6 +143,8 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const handleSelect = (i) => {
     if (revealed || !question) return
     const correct = i === question.correct_index
+    // Sound: this click is the user gesture the autoplay policy requires, so init here then play.
+    initSound().then(() => { if (correct) playCorrect(); else playWrong() })
     if (correct) {
       // Match the store's correct-answer XP formula (useGameStore: 15 + level*3) so the float is truthful.
       const gain = 15 + stats.level * 3
@@ -155,6 +160,11 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
     // streak), so we deliberately do not break it here (single-sourced break on timeout).
     if (correct) useGameStore.getState().incrementStreak()
     else useGameStore.getState().breakStreak()
+    // Streak chime when the badge crosses a tier (3 STREAK / 5 ON FIRE / 7 INFERNO), pitch-shifted.
+    if (correct) {
+      const s = useGameStore.getState().currentStreak
+      if (s === 3 || s === 5 || s === 7) playStreak(s)
+    }
     onAnswer(i)
     if (gameMode === 'survival' && !correct) {
       useGameStore.getState().loseLife()
@@ -224,6 +234,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
             {learningCardsCount>0&&<button style={{...navBtn,color:'#FB923C'}} onClick={nav.cards}>📚 {learningCardsCount}</button>}
             <button style={{...navBtn,color:'#D4AF37'}} onClick={nav.character}>◉ Lv.{stats.level}</button>
             <button style={{...navBtn,color:'#6EE7B7'}} onClick={nav.leaderboard}>🌍</button>
+            <button style={{...navBtn,color:muted?MUTED:'#D4AF37',padding:'0.3rem 0.5rem',fontSize:'0.9rem'}} title={muted?'Sound off':'Sound on'} aria-label={muted?'Unmute sound effects':'Mute sound effects'} onClick={()=>{const nv=!muted;persistMuted(nv);setMuted(nv)}}>{muted?'🔇':'🔊'}</button>
           </div>
         </div>
         {/* Realm hero banner (image behind a top-light/bottom-dark gradient, name bottom-left) */}
