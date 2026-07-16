@@ -42,6 +42,13 @@ export const REALMS = [
     imageUrl:STORAGE+'/realm-12-ethics-wisdom.png' },
 ]
 
+// Deterministic daily realm: same for every player on a given calendar day (UTC),
+// rotates every 24h. T1 consumes this for a "TODAY'S REALM" spotlight on RealmSelect.
+export const getDailyRealm = () => {
+  const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24))
+  return REALMS[daysSinceEpoch % REALMS.length]
+}
+
 export const KNOWLEDGE_TYPES = {
   empirical:     { label:'Empirically Established', stars:'★★★★★', color:'#4ADE80' },
   historical:    { label:'Historically Documented',  stars:'★★★★☆', color:'#86EFAC' },
