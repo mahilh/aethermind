@@ -29,13 +29,14 @@ function timeAgo(ts) {
 export default function Leaderboard({ leaderboard, playerName, onBack }) {
   const acc = (c,t) => t ? Math.round(c/t*100) : 0
   const [period, setPeriod] = useState('all')
-  const [weekEntries, setWeekEntries] = useState([])
+  const [weekEntries, setWeekEntries] = useState(null)  // null = not yet fetched (distinguishes loading from genuinely empty)
   // 'all' uses the realtime prop from App; 'week' fetches a snapshot on demand.
   useEffect(() => {
     if (period !== 'week') return
-    getLeaderboard('week').then(setWeekEntries).catch(console.error)
+    getLeaderboard('week').then(setWeekEntries).catch(() => setWeekEntries([]))
   }, [period])
-  const entries = period === 'week' ? weekEntries : leaderboard
+  const entries = period === 'week' ? (weekEntries ?? []) : leaderboard
+  const weekLoading = period === 'week' && weekEntries === null
 
   return (
     <div style={{minHeight:'100vh',background:'radial-gradient(ellipse at 50% -5%,#001a2e 0%,#050510 55%)',padding:'1.4rem 1.4rem 3rem',fontFamily:F,color:TEXT,position:'relative',overflow:'hidden'}}>
@@ -63,7 +64,12 @@ export default function Leaderboard({ leaderboard, playerName, onBack }) {
           ))}
         </div>
 
-        {entries.length === 0 ? (
+        {weekLoading ? (
+          <div style={{textAlign:'center',padding:'4rem 2rem',color:MUTED}}>
+            <div style={{fontSize:'2.5rem',marginBottom:'1rem',color:'#D4AF37',animation:'spin 3s linear infinite'}}>◉</div>
+            <div style={{lineHeight:'1.75',fontSize:'0.82rem',letterSpacing:'0.1em'}}>Consulting this week's index...</div>
+          </div>
+        ) : entries.length === 0 ? (
           <div style={{textAlign:'center',padding:'4rem 2rem',color:MUTED}}>
             <div style={{fontSize:'3.5rem',marginBottom:'1rem'}}>🌍</div>
             <div style={{lineHeight:'1.75',fontSize:'0.88rem'}}>No souls registered yet.<br/>Be the first to ascend.</div>
