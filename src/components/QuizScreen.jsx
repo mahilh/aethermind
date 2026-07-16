@@ -45,6 +45,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const [gameOver, setGameOver] = useState(false)
   const [gauntletDone, setGauntletDone] = useState(false)
   const [muted, setMuted] = useState(() => isMuted())
+  const [showTimeout, setShowTimeout] = useState(false)
   const [showXpPop, setShowXpPop] = useState(false)
   const [xpEarned, setXpEarned] = useState(0)
   const [xpPopKey, setXpPopKey] = useState(0)
@@ -82,6 +83,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
       clearInterval(ticker)
       setTimeLeft(0)
       timedOutRef.current = true
+      setShowTimeout(true)   // floating TIME popup (fades up)
       // Timeout reveals the correct answer with 0 XP and no learning card (T2 store action).
       // NOT onAnswer/answerQuestion (those award 5 XP + push a card); the 2s effect below calls onNext.
       useGameStore.getState().timeoutQuestion()
@@ -135,7 +137,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
     if (xpPopTimerRef.current) clearTimeout(xpPopTimerRef.current)
     if (levelUpTimerRef.current) clearTimeout(levelUpTimerRef.current)
   }, [])
-  useEffect(() => { setShowXpPop(false) }, [question])
+  useEffect(() => { setShowXpPop(false); setShowTimeout(false) }, [question])
 
   // Answer click: run the normal answer flow, then apply mode consequences.
   // answerQuestion() touches neither lives nor gauntlet count, so both are driven here
@@ -281,6 +283,10 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
           {showXpPop&&<div key={xpPopKey} aria-hidden="true" style={{position:'absolute',top:'35%',left:'50%',transform:'translateX(-50%)',zIndex:200,pointerEvents:'none',animation:'xpFloat 1.5s ease-out forwards'}}>
             <span style={{fontFamily:PIXEL,fontSize:'20px',color:'#39FF14',animation:'pixelGlow 0.8s ease-in-out',whiteSpace:'nowrap',display:'block'}}>+{xpEarned} XP</span>
           </div>}
+          {/* Floating TIME burst on a Speed timeout (Press Start 2P, red, fades up) */}
+          {showTimeout&&<div aria-hidden="true" style={{position:'absolute',top:'35%',left:'50%',transform:'translateX(-50%)',zIndex:200,pointerEvents:'none',animation:'xpFloat 1.5s ease-out forwards'}}>
+            <span style={{fontFamily:PIXEL,fontSize:'12px',color:'#FF3131',textShadow:'0 0 12px rgba(255,49,49,0.6)',whiteSpace:'nowrap',display:'block'}}>TIME</span>
+          </div>}
           {/* Realm Gauntlet progress (Q x / 10) */}
           {isGauntlet&&<div style={{marginBottom:'1rem'}}>
             <div style={{display:'flex',justifyContent:'flex-end',marginBottom:'0.4rem'}}>
@@ -290,13 +296,13 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
               <div style={{height:'100%',background:'#D4AF37',borderRadius:'3px',width:`${Math.min(gauntletCount,10)/10*100}%`,transition:'width 0.4s ease'}}/>
             </div>
           </div>}
-          {/* Speed Oracle timer (between stats row and knowledge badge) */}
+          {/* Speed Oracle timer: gold -> amber -> red urgency, pulse under 5s */}
           {isSpeed&&<div style={{marginBottom:'1rem'}}>
             <div style={{display:'flex',justifyContent:'flex-end',marginBottom:'0.4rem'}}>
-              <span style={{fontFamily:PIXEL,fontSize:'9px',color:'#D4AF37',letterSpacing:'0.5px'}}>{fmtTime(timeLeft)}</span>
+              <span style={{fontFamily:PIXEL,fontSize:'9px',color:timeLeft<10?'#FF3131':'#D4AF37',letterSpacing:'0.5px',animation:timeLeft<5?'timerPulse 0.5s ease-in-out infinite':undefined}}>{fmtTime(timeLeft)}</span>
             </div>
             <div style={{height:'6px',background:'rgba(255,255,255,0.07)',borderRadius:'3px',overflow:'hidden'}}>
-              <div ref={barRef} style={{height:'100%',background:'#D4AF37',borderRadius:'3px'}}/>
+              <div ref={barRef} style={{height:'100%',background:timeLeft>20?'#D4AF37':timeLeft>=10?'#F59E0B':'#FF3131',borderRadius:'3px',animation:timeLeft<5?'timerPulse 0.5s ease-in-out infinite':undefined}}/>
             </div>
           </div>}
           {/* Knowledge badge (hidden in Blind Seer: the mystery is the mode) */}
