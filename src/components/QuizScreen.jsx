@@ -44,8 +44,11 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const [gauntletDone, setGauntletDone] = useState(false)
   const [showXpPop, setShowXpPop] = useState(false)
   const [xpEarned, setXpEarned] = useState(0)
+  const [xpPopKey, setXpPopKey] = useState(0)
   const [displayXp, setDisplayXp] = useState(stats.xp)
   const prevXpRef = useRef(stats.xp)
+  const displayXpRef = useRef(stats.xp)
+  const xpPopTimerRef = useRef(null)
   const barRef = useRef(null)
   const timedOutRef = useRef(false)
 
@@ -86,20 +89,31 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
     return () => clearTimeout(adv)
   }, [revealed, isSpeed, onNext])
 
-  // XP counter arcade tick: animate the TOTAL XP stat from its old value to the new one over ~600ms.
+  // XP counter arcade tick: count the TOTAL XP stat from what is on screen up to the new value over ~600ms.
+  // Start from the currently displayed value (displayXpRef) so an interrupted tick never snaps backward, and
+  // snap without animating when diff <= 0 (a level-up wraps xp DOWN in the store; the +XP pop already tells the
+  // gain, so we must not run a misleading downward countdown).
   useEffect(() => {
     if (stats.xp === prevXpRef.current) return
-    const start = prevXpRef.current, end = stats.xp, diff = end - start
-    const steps = Math.min(Math.abs(diff), 20)
+    const start = displayXpRef.current, end = stats.xp
+    prevXpRef.current = end
+    const diff = end - start
+    const setXp = (v) => { displayXpRef.current = v; setDisplayXp(v) }
+    if (diff <= 0) { setXp(end); return }
+    const steps = Math.min(diff, 20)
     const interval = Math.floor(600 / steps)
     let step = 0
     const timer = setInterval(() => {
       step++
-      if (step >= steps) { setDisplayXp(end); prevXpRef.current = end; clearInterval(timer) }
-      else setDisplayXp(Math.round(start + (diff * step / steps)))
+      if (step >= steps) { setXp(end); clearInterval(timer) }
+      else setXp(Math.round(start + (diff * step / steps)))
     }, interval)
     return () => clearInterval(timer)
   }, [stats.xp])
+
+  // XP pop hygiene: clear a pending hide-timer on unmount, and hide any lingering pop when the question changes.
+  useEffect(() => () => { if (xpPopTimerRef.current) clearTimeout(xpPopTimerRef.current) }, [])
+  useEffect(() => { setShowXpPop(false) }, [question])
 
   // Answer click: run the normal answer flow, then apply mode consequences.
   // answerQuestion() touches neither lives nor gauntlet count, so both are driven here
@@ -111,8 +125,10 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
       // Match the store's correct-answer XP formula (useGameStore: 15 + level*3) so the float is truthful.
       const gain = 15 + stats.level * 3
       setXpEarned(gain)
+      setXpPopKey(k => k + 1)   // remount the pop so xpFloat replays even on back-to-back correct answers
       setShowXpPop(true)
-      setTimeout(() => setShowXpPop(false), 1500)
+      if (xpPopTimerRef.current) clearTimeout(xpPopTimerRef.current)
+      xpPopTimerRef.current = setTimeout(() => setShowXpPop(false), 1500)
     }
     onAnswer(i)
     if (gameMode === 'survival' && !correct) {
@@ -199,7 +215,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
         {/* Question */}
         {question&&!loading&&<>
           {/* Floating +XP burst on a correct answer (Press Start 2P, neon green) */}
-          {showXpPop&&<div style={{position:'absolute',top:'35%',left:'50%',transform:'translateX(-50%)',zIndex:200,pointerEvents:'none',animation:'xpFloat 1.5s ease-out forwards'}}>
+          {showXpPop&&<div key={xpPopKey} aria-hidden="true" style={{position:'absolute',top:'35%',left:'50%',transform:'translateX(-50%)',zIndex:200,pointerEvents:'none',animation:'xpFloat 1.5s ease-out forwards'}}>
             <span style={{fontFamily:PIXEL,fontSize:'20px',color:'#39FF14',animation:'pixelGlow 0.8s ease-in-out',whiteSpace:'nowrap',display:'block'}}>+{xpEarned} XP</span>
           </div>}
           {/* Realm Gauntlet progress (Q x / 10) */}
