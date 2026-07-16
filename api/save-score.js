@@ -24,10 +24,23 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid stats' })
   }
 
-  const xp       = Math.min(Number(stats.xp)       || 0, 99999)
-  const level    = Math.min(Number(stats.level)    || 1, 100)
-  const correct  = Math.min(Number(stats.correct)  || 0, 99999)
-  const answered = Math.min(Number(stats.answered) || 0, 99999)
+  const rawXp       = Number(stats.xp)
+  const rawLevel    = Number(stats.level)
+  const rawCorrect  = Number(stats.correct)
+  const rawAnswered = Number(stats.answered)
+
+  // Reject non-finite, negative, or non-integer values BEFORE clamping, so a forged
+  // negative or fractional stat cannot slip through Math.min into the leaderboard.
+  for (const [k, v] of Object.entries({ xp: rawXp, level: rawLevel, correct: rawCorrect, answered: rawAnswered })) {
+    if (!Number.isFinite(v) || v < 0 || !Number.isInteger(v)) {
+      return res.status(400).json({ error: `Invalid ${k}` })
+    }
+  }
+
+  const xp       = Math.min(rawXp, 99999)
+  const level    = Math.min(Math.max(rawLevel, 1), 100)
+  const correct  = Math.min(rawCorrect, 99999)
+  const answered = Math.min(rawAnswered, 99999)
 
   if (correct > answered) {
     return res.status(400).json({ error: 'correct cannot exceed answered' })
@@ -36,8 +49,8 @@ export default async function handler(req, res) {
   const realmScores = stats.realm && typeof stats.realm === 'object' ? stats.realm : {}
   const attributes  = stats.attrs && typeof stats.attrs === 'object'  ? stats.attrs  : {}
 
-  if (JSON.stringify(realmScores).length > 5000) {
-    return res.status(400).json({ error: 'realm_scores too large' })
+  if (JSON.stringify(realmScores).length > 5000 || JSON.stringify(attributes).length > 5000) {
+    return res.status(400).json({ error: 'stats payload too large' })
   }
 
   const payload = {
@@ -66,7 +79,7 @@ export default async function handler(req, res) {
     if (!response.ok) {
       const body = await response.text()
       console.error('[AetherMind API] save-score: REST error', response.status, body)
-      return res.status(500).json({ error: 'Failed to save score', status: response.status })
+      return res.status(500).json({ error: 'Failed to save score' })
     }
 
     console.log('[AetherMind API] save-score: ok', playerName.trim(), 'xp', xp)
