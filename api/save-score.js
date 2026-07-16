@@ -8,8 +8,23 @@
 // and a heavy shared-NAT session (several players on one IP) can approach 50/hr; raise the cap
 // if 429s show up in logs.
 const _rl = new Map()
+
+// Derive the client IP from platform-set headers only. Vercel sets x-real-ip to the true client
+// address, and the LAST x-forwarded-for hop is the one Vercel appended, so neither can be spoofed
+// the way the FIRST x-forwarded-for entry (client-controlled) can. Sanitize to an IP-shaped
+// charset and cap the length before the value is logged or used as a map key, which blocks log
+// forgery and bounds the key space.
+function clientIp(req) {
+  const xff = req.headers['x-forwarded-for']
+  const lastHop = xff ? xff.split(',').pop().trim() : ''
+  const raw = req.headers['x-real-ip'] || lastHop || req.socket?.remoteAddress || 'unknown'
+  return String(raw).replace(/[^0-9a-fA-F:.]/g, '').slice(0, 45) || 'unknown'
+}
+
 function rateLimit(ip) {
   const now = Date.now()
+  // Sweep expired buckets so the map cannot grow unbounded over the instance lifetime.
+  if (_rl.size > 1000) { for (const [k, v] of _rl) if (now > v.t) _rl.delete(k) }
   const e = _rl.get(ip) || { n: 0, t: now + 3600000 }
   if (now > e.t) { e.n = 0; e.t = now + 3600000 }
   e.n++
@@ -22,7 +37,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || 'unknown'
+  const ip = clientIp(req)
   if (rateLimit(ip)) {
     console.warn('[AetherMind API] rate-limited:', ip)
     return res.status(429).json({ error: 'Rate limit exceeded. Please slow down.' })
