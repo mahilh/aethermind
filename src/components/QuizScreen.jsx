@@ -277,7 +277,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
           <div style={{display:'flex',flexDirection:'column',gap:'0.55rem',marginBottom:'1.2rem'}}>
             {question.options.map((opt,i)=>{
               let bdr='rgba(255,255,255,0.09)',bg='rgba(255,255,255,0.025)',tc=TEXT,cur='pointer'
-              if(revealed){cur='default';if(i===question.correct_index){bdr='#4ADE80';bg='#4ADE8012';tc='#4ADE80'}else if(i===picked){bdr='#F87171';bg='#F8717112';tc='#F87171'}else{tc='rgba(232,217,192,0.3)'}}
+              if(revealed){cur='default';if(i===question.correct_index){bdr='#39FF14';bg='#39FF1412';tc='#39FF14'}else if(i===picked){bdr='#FF3131';bg='#FF313112';tc='#FF3131'}else{tc='rgba(232,217,192,0.3)'}}
               let anim
               if(revealed){ if(i===question.correct_index) anim='correctFlash 1s ease-out forwards'; else if(i===picked) anim='wrongShake 0.5s ease-out' }
               return (
@@ -292,8 +292,8 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
           </div>
           {/* Result panel */}
           {revealed&&<>
-            <div style={{background:ok?'#4ADE8008':'#F8717108',border:`1px solid ${ok?'#4ADE8025':'#F8717125'}`,borderRadius:'14px',padding:'1.4rem',marginBottom:'0.9rem'}}>
-              <div style={{color:ok?'#4ADE80':'#F87171',fontWeight:'bold',fontSize:'0.98rem',marginBottom:'0.8rem'}}>
+            <div style={{background:ok?'#39FF1408':'#FF313108',border:`1px solid ${ok?'#39FF1425':'#FF313125'}`,borderRadius:'14px',padding:'1.4rem',marginBottom:'0.9rem'}}>
+              <div style={{color:ok?'#39FF14':'#FF3131',fontWeight:'bold',fontSize:'0.98rem',marginBottom:'0.8rem'}}>
                 {ok?'✓ Correct, well perceived':'✗ Not this time, wisdom grows from this'}
               </div>
               <p style={{fontFamily:'var(--font-wisdom)',fontSize:'16px',lineHeight:'1.85',fontStyle:'italic',color:'rgba(232,217,192,0.82)',marginBottom:'0.9rem',animation:'fadeInUp 0.4s ease-out'}}>{question.explanation}</p>
