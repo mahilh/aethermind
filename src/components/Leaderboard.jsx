@@ -91,6 +91,7 @@ export default function Leaderboard({ leaderboard, playerName, onBack }) {
                         {p.player_name} {isMe&&'(you)'}
                       </div>
                       <div style={{fontSize:'0.7rem',color:MUTED}}>Level {p.level} · {pct}% accuracy · {timeAgo(p.updated_at)}</div>
+                      {p.max_streak > 0 && <div style={{marginTop:'0.25rem',fontFamily:'"Press Start 2P",monospace',fontSize:'9px',color:'#F59E0B'}}>{p.max_streak} STREAK</div>}
                     </div>
                     <div style={{textAlign:'right'}}>
                       <div style={{fontSize:'1.3rem',color:'#D4AF37',fontWeight:'bold'}}>{p.xp}</div>
@@ -110,6 +111,7 @@ export default function Leaderboard({ leaderboard, playerName, onBack }) {
                   <div style={{flex:1}}>
                     <span style={{fontSize:'0.9rem',color:isMe?'#D4AF37':TEXT}}>{p.player_name} {isMe&&'(you)'}</span>
                     <span style={{fontSize:'0.68rem',color:MUTED,marginLeft:'0.6rem'}}>Lv.{p.level} · {pct}%</span>
+                    {p.max_streak > 0 && <span style={{fontFamily:'"Press Start 2P",monospace',fontSize:'9px',color:'#F59E0B',marginLeft:'0.5rem'}}>{p.max_streak} STREAK</span>}
                   </div>
                   <div style={{color:'#9B59B6',fontSize:'0.85rem',fontWeight:'bold'}}>{p.xp} XP</div>
                 </div>
