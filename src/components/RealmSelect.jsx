@@ -1,6 +1,6 @@
 // AetherMind: RealmSelect · T1 LANE
 // Props: { stats, learningCardsCount, onPick, nav }
-import { REALMS, STARS } from '../lib/constants'
+import { REALMS, STARS, getDailyRealm } from '../lib/constants'
 
 const F='"EB Garamond","Georgia",serif',TEXT='#E8D9C0',MUTED='rgba(232,217,192,0.4)'
 const navBtn={background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'8px',padding:'0.4rem 0.85rem',color:MUTED,cursor:'pointer',fontSize:'0.76rem',fontFamily:F}
@@ -13,6 +13,7 @@ function Stars() {
 
 export default function RealmSelect({ stats, learningCardsCount, onPick, nav }) {
   const xpPct = Math.min(100,(stats.xp/stats.xpToNext)*100)
+  const dailyRealm = getDailyRealm()
   return (
     <div style={{minHeight:'100vh',background:'radial-gradient(ellipse at 50% -5%,#0d0028 0%,#050510 55%)',padding:'1.4rem 1.4rem 3rem',fontFamily:F,color:TEXT,position:'relative',overflow:'hidden'}}>
       <Stars/>
@@ -41,10 +42,13 @@ export default function RealmSelect({ stats, learningCardsCount, onPick, nav }) 
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:'0.8rem'}}>
           {REALMS.map(r=>{
             const rs=stats.realm[String(r.id)], pct=rs?Math.round(rs.c/rs.t*100):null
+            const isDaily = r.id === dailyRealm?.id
+            const dailyGlow = '0 0 0 1px #D4AF37, 0 0 16px rgba(212,175,55,0.3)'
             return (
-              <button key={r.id} onClick={()=>onPick(r)} style={{background:`${r.color}0d`,border:`1px solid ${r.color}30`,borderRadius:'12px',padding:'1.1rem',cursor:'pointer',textAlign:'left',fontFamily:F,color:TEXT,transition:'border-color 0.18s,box-shadow 0.18s,transform 0.15s'}}
+              <button key={r.id} onClick={()=>onPick(r)} style={{position:'relative',background:`${r.color}0d`,border:`1px solid ${r.color}30`,borderRadius:'12px',padding:'1.1rem',cursor:'pointer',textAlign:'left',fontFamily:F,color:TEXT,transition:'border-color 0.18s,box-shadow 0.18s,transform 0.15s',...(isDaily&&{boxShadow:dailyGlow})}}
                 onMouseEnter={e=>{e.currentTarget.style.borderColor=r.color;e.currentTarget.style.boxShadow=`0 0 18px ${r.color}30`;e.currentTarget.style.transform='translateY(-2px)'}}
-                onMouseLeave={e=>{e.currentTarget.style.borderColor=`${r.color}30`;e.currentTarget.style.boxShadow='none';e.currentTarget.style.transform='translateY(0)'}}>
+                onMouseLeave={e=>{e.currentTarget.style.borderColor=`${r.color}30`;e.currentTarget.style.boxShadow=isDaily?dailyGlow:'none';e.currentTarget.style.transform='translateY(0)'}}>
+                {isDaily&&<div style={{position:'absolute',top:'-1px',right:'-1px',fontFamily:'"Press Start 2P",monospace',fontSize:'9px',color:'#04040A',background:'#D4AF37',padding:'3px 6px',borderRadius:'0 8px 0 6px',letterSpacing:'0.05em',zIndex:10}}>TODAY</div>}
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'0.45rem'}}>
                   <span style={{fontSize:'1.55rem',lineHeight:1,color:r.color,filter:`drop-shadow(0 0 6px ${r.color}60)`}}>{r.glyph}</span>
                   {pct!==null&&<span style={{fontSize:'0.68rem',padding:'0.12rem 0.48rem',borderRadius:'20px',background:pct>=70?'#4ADE8020':pct>=50?'#FCD34D20':'#F8717120',color:pct>=70?'#4ADE80':pct>=50?'#FCD34D':'#F87171',border:`1px solid ${pct>=70?'#4ADE8040':pct>=50?'#FCD34D40':'#F8717140'}`}}>{pct}%</span>}
