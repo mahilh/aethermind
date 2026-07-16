@@ -46,6 +46,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'correct cannot exceed answered' })
   }
 
+  // Optional per-run best streak. Coerce to a safe non-negative integer (0..120) so a
+  // forged negative or fractional value cannot land in the leaderboard.
+  const maxStreak = Math.max(0, Math.min(Math.floor(Number(stats.maxStreak) || 0), 120))
+
   const realmScores = stats.realm && typeof stats.realm === 'object' ? stats.realm : {}
   const attributes  = stats.attrs && typeof stats.attrs === 'object'  ? stats.attrs  : {}
 
@@ -63,6 +67,10 @@ export default async function handler(req, res) {
     attributes:     attributes,
     updated_at:     new Date().toISOString()
   }
+  // Include max_streak only when present, so this route stays safe to deploy before the
+  // am_scores.max_streak column (migration 007) is applied: a 0 carries no info and the
+  // key is simply omitted. Once 007 is live, real streaks are stored.
+  if (maxStreak > 0) payload.max_streak = maxStreak
 
   try {
     const response = await fetch(`${supabaseUrl}/rest/v1/am_scores`, {

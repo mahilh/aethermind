@@ -20,6 +20,8 @@ export const useGameStore = create(
       picked:null, revealed:false, sessionScore:{c:0,t:0}, cardOpen:null, leaderboard:[],
       // Game mode (session only, reset on reload)
       gameMode:'classic', livesRemaining:3, gauntletCount:0, speedTimeLeft:30,
+      // Streak / combo (session only, resets on new run + reload)
+      currentStreak:0, maxStreak:0,
 
       setScreen: (s) => set(st => { st.screen = s }),
       setPlayerName: (n) => set(st => { st.playerName = n }),
@@ -30,13 +32,22 @@ export const useGameStore = create(
       setLeaderboard: (lb) => set(st => { st.leaderboard = lb }),
       setCardOpen: (i) => set(st => { st.cardOpen = st.cardOpen===i ? null : i }),
       resetQuestion: () => set(st => { st.question=null; st.picked=null; st.revealed=false; st.error=null }),
-      resetSession: () => set(st => { st.sessionScore={c:0,t:0} }),
+      resetSession: () => set(st => { st.sessionScore={c:0,t:0}; st.currentStreak=0; st.maxStreak=0 }),
 
       setGameMode: (m) => set(st => { st.gameMode = m }),
       setLivesRemaining: (n) => set(st => { st.livesRemaining = n }),
       loseLife: () => set(st => { st.livesRemaining = Math.max(0, st.livesRemaining - 1) }),
       incrementGauntlet: () => set(st => { st.gauntletCount += 1 }),
       resetGauntlet: () => set(st => { st.gauntletCount = 0 }),
+      // Streak / combo: T1 calls incrementStreak() on a correct answer and breakStreak()
+      // on a wrong answer. A Speed-mode timeout is handled in the store (timeoutQuestion
+      // resets the streak), so T1 need not break it there. maxStreak is the best run
+      // streak, submitted to the leaderboard (session only, never persisted).
+      incrementStreak: () => set(st => {
+        st.currentStreak = (st.currentStreak || 0) + 1
+        if (st.currentStreak > (st.maxStreak || 0)) st.maxStreak = st.currentStreak
+      }),
+      breakStreak: () => set(st => { st.currentStreak = 0 }),
       addSeenQuestion: (id) => set(st => {
         if (!st.seenQuestions.includes(id)) st.seenQuestions.push(id)
         if (st.seenQuestions.length > 200) st.seenQuestions = st.seenQuestions.slice(-200)
@@ -51,6 +62,7 @@ export const useGameStore = create(
         if (!q || st.picked !== null) return
         st.picked = -1
         st.revealed = true
+        st.currentStreak = 0
         st.sessionScore.t += 1
         st.stats.answered += 1
         if (realm) {
