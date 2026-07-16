@@ -26,3 +26,43 @@ input  { font-family:var(--font-serif); }
 @keyframes tw    { from{opacity:.12} to{opacity:.85} }
 @keyframes spin  { from{transform:rotate(0)} to{transform:rotate(360deg)} }
 @keyframes glow  { 0%,100%{box-shadow:0 0 10px var(--color-gold)} 50%{box-shadow:0 0 30px var(--color-gold)} }
+
+/* Answer-feedback animations (arcade game-feel) */
+@keyframes correctFlash {
+  0%   { background: rgba(57,255,20,0.0);  box-shadow: none; }
+  20%  { background: rgba(57,255,20,0.25); box-shadow: 0 0 0 2px #39FF14, 0 0 0 4px #04040A, 0 0 0 6px #39FF14, 0 0 20px rgba(57,255,20,0.4); }
+  50%  { background: rgba(57,255,20,0.12); box-shadow: 0 0 0 2px #39FF14, 0 0 0 4px #04040A, 0 0 0 6px #39FF14; }
+  80%  { background: rgba(57,255,20,0.06); box-shadow: 0 0 0 1px #39FF14, 0 0 12px rgba(57,255,20,0.2); }
+  100% { background: rgba(57,255,20,0.04); box-shadow: 0 0 0 1px #39FF14; }
+}
+@keyframes wrongShake {
+  0%   { transform: translateX(0);    background: rgba(255,49,49,0.0); }
+  15%  { transform: translateX(-7px); background: rgba(255,49,49,0.2); }
+  30%  { transform: translateX(7px);  background: rgba(255,49,49,0.15); }
+  45%  { transform: translateX(-5px); background: rgba(255,49,49,0.1); }
+  60%  { transform: translateX(5px);  background: rgba(255,49,49,0.08); }
+  80%  { transform: translateX(-2px); }
+  100% { transform: translateX(0);    background: rgba(255,49,49,0.03); }
+}
+@keyframes xpFloat {
+  0%   { opacity: 1; transform: translateY(0px) scale(1); }
+  20%  { opacity: 1; transform: translateY(-15px) scale(1.15); }
+  60%  { opacity: 0.8; transform: translateY(-40px) scale(1.05); }
+  100% { opacity: 0; transform: translateY(-65px) scale(0.85); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0px); }
+}
+@keyframes pixelGlow {
+  0%, 100% { text-shadow: 0 0 8px #39FF14, 0 0 16px rgba(57,255,20,0.5); }
+  50%  { text-shadow: 0 0 16px #39FF14, 0 0 32px rgba(57,255,20,0.7), 0 0 48px rgba(57,255,20,0.3); }
+}
+
+/* Respect reduced-motion: neutralize keyframe animations; CSS transitions (Speed timer bar) stay intact */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

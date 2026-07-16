@@ -42,6 +42,8 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const [timeLeft, setTimeLeft] = useState(30)
   const [gameOver, setGameOver] = useState(false)
   const [gauntletDone, setGauntletDone] = useState(false)
+  const [showXpPop, setShowXpPop] = useState(false)
+  const [xpEarned, setXpEarned] = useState(0)
   const barRef = useRef(null)
   const timedOutRef = useRef(false)
 
@@ -88,6 +90,13 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const handleSelect = (i) => {
     if (revealed || !question) return
     const correct = i === question.correct_index
+    if (correct) {
+      // Match the store's correct-answer XP formula (useGameStore: 15 + level*3) so the float is truthful.
+      const gain = 15 + stats.level * 3
+      setXpEarned(gain)
+      setShowXpPop(true)
+      setTimeout(() => setShowXpPop(false), 1500)
+    }
     onAnswer(i)
     if (gameMode === 'survival' && !correct) {
       useGameStore.getState().loseLife()
@@ -172,6 +181,10 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
         </div>}
         {/* Question */}
         {question&&!loading&&<>
+          {/* Floating +XP burst on a correct answer (Press Start 2P, neon green) */}
+          {showXpPop&&<div style={{position:'absolute',top:'35%',left:'50%',transform:'translateX(-50%)',zIndex:200,pointerEvents:'none',animation:'xpFloat 1.5s ease-out forwards'}}>
+            <span style={{fontFamily:PIXEL,fontSize:'20px',color:'#39FF14',animation:'pixelGlow 0.8s ease-in-out',whiteSpace:'nowrap',display:'block'}}>+{xpEarned} XP</span>
+          </div>}
           {/* Realm Gauntlet progress (Q x / 10) */}
           {isGauntlet&&<div style={{marginBottom:'1rem'}}>
             <div style={{display:'flex',justifyContent:'flex-end',marginBottom:'0.4rem'}}>
@@ -232,8 +245,10 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
             {question.options.map((opt,i)=>{
               let bdr='rgba(255,255,255,0.09)',bg='rgba(255,255,255,0.025)',tc=TEXT,cur='pointer'
               if(revealed){cur='default';if(i===question.correct_index){bdr='#4ADE80';bg='#4ADE8012';tc='#4ADE80'}else if(i===picked){bdr='#F87171';bg='#F8717112';tc='#F87171'}else{tc='rgba(232,217,192,0.3)'}}
+              let anim
+              if(revealed){ if(i===question.correct_index) anim='correctFlash 1s ease-out forwards'; else if(i===picked) anim='wrongShake 0.5s ease-out' }
               return (
-                <button key={i} onClick={()=>handleSelect(i)} disabled={revealed} style={{background:bg,border:`1px solid ${bdr}`,borderRadius:'10px',padding:'0.82rem 1.1rem',textAlign:'left',cursor:cur,color:tc,fontFamily:'var(--font-question)',fontSize:'17px',lineHeight:'1.7',letterSpacing:'0.01em',display:'flex',alignItems:'center',gap:'0.8rem',transition:'all 0.16s'}}
+                <button key={i} onClick={()=>handleSelect(i)} disabled={revealed} style={{background:bg,border:`1px solid ${bdr}`,borderRadius:'10px',padding:'0.82rem 1.1rem',textAlign:'left',cursor:cur,color:tc,fontFamily:'var(--font-question)',fontSize:'17px',lineHeight:'1.7',letterSpacing:'0.01em',display:'flex',alignItems:'center',gap:'0.8rem',transition:'all 0.16s',animation:anim}}
                   onMouseEnter={e=>{if(!revealed){e.currentTarget.style.borderColor=realm.color;e.currentTarget.style.background=`${realm.color}12`}}}
                   onMouseLeave={e=>{if(!revealed){e.currentTarget.style.borderColor='rgba(255,255,255,0.09)';e.currentTarget.style.background='rgba(255,255,255,0.025)'}}}>
                   <span style={{width:'22px',height:'22px',borderRadius:'50%',border:`1px solid ${bdr}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',flexShrink:0,color:tc}}>{['A','B','C','D'][i]}</span>
@@ -248,11 +263,11 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
               <div style={{color:ok?'#4ADE80':'#F87171',fontWeight:'bold',fontSize:'0.98rem',marginBottom:'0.8rem'}}>
                 {ok?'✓ Correct, well perceived':'✗ Not this time, wisdom grows from this'}
               </div>
-              <p style={{fontFamily:'var(--font-wisdom)',fontSize:'16px',lineHeight:'1.85',fontStyle:'italic',color:'rgba(232,217,192,0.82)',marginBottom:'0.9rem'}}>{question.explanation}</p>
-              {question.insight&&<div style={{borderLeft:`3px solid ${realm.color}`,paddingLeft:'1rem',color:'#D4AF37',fontFamily:'var(--font-wisdom)',fontSize:'15px',fontStyle:'italic',marginBottom:'0.75rem'}}>✧ {question.insight}</div>}
+              <p style={{fontFamily:'var(--font-wisdom)',fontSize:'16px',lineHeight:'1.85',fontStyle:'italic',color:'rgba(232,217,192,0.82)',marginBottom:'0.9rem',animation:'fadeInUp 0.4s ease-out'}}>{question.explanation}</p>
+              {question.insight&&<div style={{borderLeft:`3px solid ${realm.color}`,paddingLeft:'1rem',color:'#D4AF37',fontFamily:'var(--font-wisdom)',fontSize:'15px',fontStyle:'italic',marginBottom:'0.75rem',animation:'fadeInUp 0.6s ease-out 0.15s both'}}>✧ {question.insight}</div>}
               {question.cross_references?.length>0&&<div style={{fontSize:'0.67rem',color:'rgba(232,217,192,0.3)'}}>📖 {question.cross_references.join(' · ')}</div>}
             </div>
-            <button onClick={onNext} style={{width:'100%',background:`${realm.color}18`,border:`1px solid ${realm.color}50`,borderRadius:'10px',padding:'0.88rem',color:realm.color,fontSize:'0.93rem',fontFamily:F,cursor:'pointer',letterSpacing:'0.08em',transition:'background 0.18s'}}
+            <button onClick={onNext} style={{width:'100%',background:`${realm.color}18`,border:`1px solid ${realm.color}50`,borderRadius:'10px',padding:'0.88rem',color:realm.color,fontSize:'0.93rem',fontFamily:F,cursor:'pointer',letterSpacing:'0.08em',transition:'background 0.18s',animation:'fadeInUp 0.8s ease-out 0.3s both'}}
               onMouseEnter={e=>e.currentTarget.style.background=`${realm.color}28`}
               onMouseLeave={e=>e.currentTarget.style.background=`${realm.color}18`}>
               Next Question →
