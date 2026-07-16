@@ -224,7 +224,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
             </div>
           )}
           {/* Question text (Blind Seer: subtle purple tint replaces the knowledge cue) */}
-          <div style={{background:gameMode==='blind'?'rgba(123,47,190,0.06)':'rgba(255,255,255,0.03)',border:`1px solid ${realm.color}30`,borderRadius:'14px',padding:'1.5rem',marginBottom:'1rem',fontSize:'20px',lineHeight:'1.7'}}>
+          <div style={{background:gameMode==='blind'?'rgba(123,47,190,0.06)':'rgba(255,255,255,0.03)',border:`1px solid ${realm.color}30`,borderRadius:'14px',padding:'1.5rem',marginBottom:'1rem',fontFamily:'var(--font-question)',fontSize:'22px',lineHeight:'1.8',letterSpacing:'0.02em'}}>
             {question.question}
           </div>
           {/* Options */}
@@ -233,7 +233,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
               let bdr='rgba(255,255,255,0.09)',bg='rgba(255,255,255,0.025)',tc=TEXT,cur='pointer'
               if(revealed){cur='default';if(i===question.correct_index){bdr='#4ADE80';bg='#4ADE8012';tc='#4ADE80'}else if(i===picked){bdr='#F87171';bg='#F8717112';tc='#F87171'}else{tc='rgba(232,217,192,0.3)'}}
               return (
-                <button key={i} onClick={()=>handleSelect(i)} disabled={revealed} style={{background:bg,border:`1px solid ${bdr}`,borderRadius:'10px',padding:'0.82rem 1.1rem',textAlign:'left',cursor:cur,color:tc,fontFamily:F,fontSize:'16px',lineHeight:'1.6',letterSpacing:'0.01em',display:'flex',alignItems:'center',gap:'0.8rem',transition:'all 0.16s'}}
+                <button key={i} onClick={()=>handleSelect(i)} disabled={revealed} style={{background:bg,border:`1px solid ${bdr}`,borderRadius:'10px',padding:'0.82rem 1.1rem',textAlign:'left',cursor:cur,color:tc,fontFamily:'var(--font-question)',fontSize:'17px',lineHeight:'1.7',letterSpacing:'0.01em',display:'flex',alignItems:'center',gap:'0.8rem',transition:'all 0.16s'}}
                   onMouseEnter={e=>{if(!revealed){e.currentTarget.style.borderColor=realm.color;e.currentTarget.style.background=`${realm.color}12`}}}
                   onMouseLeave={e=>{if(!revealed){e.currentTarget.style.borderColor='rgba(255,255,255,0.09)';e.currentTarget.style.background='rgba(255,255,255,0.025)'}}}>
                   <span style={{width:'22px',height:'22px',borderRadius:'50%',border:`1px solid ${bdr}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',flexShrink:0,color:tc}}>{['A','B','C','D'][i]}</span>
@@ -248,8 +248,8 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
               <div style={{color:ok?'#4ADE80':'#F87171',fontWeight:'bold',fontSize:'0.98rem',marginBottom:'0.8rem'}}>
                 {ok?'✓ Correct, well perceived':'✗ Not this time, wisdom grows from this'}
               </div>
-              <p style={{fontSize:'15px',lineHeight:'1.8',color:'rgba(232,217,192,0.82)',marginBottom:'0.9rem'}}>{question.explanation}</p>
-              {question.insight&&<div style={{borderLeft:`3px solid ${realm.color}`,paddingLeft:'1rem',color:realm.color,fontSize:'0.8rem',fontStyle:'italic',marginBottom:'0.75rem'}}>✧ {question.insight}</div>}
+              <p style={{fontFamily:'var(--font-wisdom)',fontSize:'16px',lineHeight:'1.85',fontStyle:'italic',color:'rgba(232,217,192,0.82)',marginBottom:'0.9rem'}}>{question.explanation}</p>
+              {question.insight&&<div style={{borderLeft:`3px solid ${realm.color}`,paddingLeft:'1rem',color:'#D4AF37',fontFamily:'var(--font-wisdom)',fontSize:'15px',fontStyle:'italic',marginBottom:'0.75rem'}}>✧ {question.insight}</div>}
               {question.cross_references?.length>0&&<div style={{fontSize:'0.67rem',color:'rgba(232,217,192,0.3)'}}>📖 {question.cross_references.join(' · ')}</div>}
             </div>
             <button onClick={onNext} style={{width:'100%',background:`${realm.color}18`,border:`1px solid ${realm.color}50`,borderRadius:'10px',padding:'0.88rem',color:realm.color,fontSize:'0.93rem',fontFamily:F,cursor:'pointer',letterSpacing:'0.08em',transition:'background 0.18s'}}

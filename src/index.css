@@ -1,9 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Press+Start+2P&display=swap');
 @import "tailwindcss";
 
 :root {
   --font-serif: 'EB Garamond', 'Georgia', 'Palatino Linotype', serif;
   --font-pixel: 'Press Start 2P', 'Courier New', monospace;
+  --font-question: 'Cinzel', 'Times New Roman', Georgia, serif;
+  --font-wisdom: 'Cinzel', Georgia, serif;
   --color-gold: #D4AF37;
   --color-purple: #7B2FBE;
   --color-text: #E8D9C0;

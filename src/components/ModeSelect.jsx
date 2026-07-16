@@ -49,7 +49,7 @@ export default function ModeSelect({ onModeSelect, nav }) {
                 onMouseLeave={e=>{ if(!on){ e.currentTarget.style.borderColor='rgba(212,175,55,0.2)'; e.currentTarget.style.boxShadow='none' } }}
               >
                 <div style={{fontSize:'36px',lineHeight:1,color:GOLD,marginBottom:'0.7rem',filter:`drop-shadow(0 0 8px ${GOLD}55)`}}>{m.icon}</div>
-                <div style={{fontFamily:PIXEL,fontSize:'9px',color:GOLD,letterSpacing:'0.5px',lineHeight:1.6,marginBottom:'0.55rem'}}>{m.label}</div>
+                <div style={{fontFamily:'var(--font-question)',fontWeight:600,fontSize:'16px',color:GOLD,letterSpacing:'0.03em',lineHeight:1.35,marginBottom:'0.55rem'}}>{m.label}</div>
                 <div style={{fontFamily:F,fontStyle:'italic',fontSize:'14px',color:MUTED,lineHeight:1.35}}>{m.desc}</div>
                 <span style={{position:'absolute',bottom:'0.55rem',right:'0.65rem',fontFamily:PIXEL,fontSize:'7px',color:AMBER,letterSpacing:'0.5px'}}>{xpLabel(m)}</span>
               </button>

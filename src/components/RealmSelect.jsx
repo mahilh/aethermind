@@ -49,8 +49,8 @@ export default function RealmSelect({ stats, learningCardsCount, onPick, nav }) 
                   <span style={{fontSize:'1.55rem',lineHeight:1,color:r.color,filter:`drop-shadow(0 0 6px ${r.color}60)`}}>{r.glyph}</span>
                   {pct!==null&&<span style={{fontSize:'0.68rem',padding:'0.12rem 0.48rem',borderRadius:'20px',background:pct>=70?'#4ADE8020':pct>=50?'#FCD34D20':'#F8717120',color:pct>=70?'#4ADE80':pct>=50?'#FCD34D':'#F87171',border:`1px solid ${pct>=70?'#4ADE8040':pct>=50?'#FCD34D40':'#F8717140'}`}}>{pct}%</span>}
                 </div>
-                <div style={{fontSize:'0.86rem',fontWeight:'bold',color:r.color,marginBottom:'0.28rem'}}>{r.name}</div>
-                <div style={{fontSize:'0.66rem',color:MUTED,lineHeight:'1.4'}}>{r.desc}</div>
+                <div style={{fontFamily:'var(--font-question)',fontSize:'16px',fontWeight:'bold',color:r.color,marginBottom:'0.28rem'}}>{r.name}</div>
+                <div style={{fontFamily:'var(--font-wisdom)',fontSize:'13px',color:MUTED,lineHeight:'1.4'}}>{r.desc}</div>
               </button>
             )
           })}
