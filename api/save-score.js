@@ -1,9 +1,31 @@
 // AetherMind · POST /api/save-score · T2 LANE · raw fetch to PostgREST (no supabase-js)
 // The service_role key must hold SELECT/INSERT/UPDATE GRANT on am_scores (migration 005);
 // PostgREST returns 42501 for any client until that grant is applied.
+
+// IP rate limit: 50 writes/hour/IP, in-memory per warm serverless instance (not shared across
+// instances, resets on cold start). Viable now that saveScore is debounced to ~25 XP (T1
+// c7f4ef1). Note: XP accrues fast, so saves still run roughly once per answer at higher levels,
+// and a heavy shared-NAT session (several players on one IP) can approach 50/hr; raise the cap
+// if 429s show up in logs.
+const _rl = new Map()
+function rateLimit(ip) {
+  const now = Date.now()
+  const e = _rl.get(ip) || { n: 0, t: now + 3600000 }
+  if (now > e.t) { e.n = 0; e.t = now + 3600000 }
+  e.n++
+  _rl.set(ip, e)
+  return e.n > 50
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || 'unknown'
+  if (rateLimit(ip)) {
+    console.warn('[AetherMind API] rate-limited:', ip)
+    return res.status(429).json({ error: 'Rate limit exceeded. Please slow down.' })
   }
 
   const supabaseUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/$/, '')
