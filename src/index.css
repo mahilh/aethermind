@@ -106,6 +106,12 @@ input  { font-family:var(--font-serif); }
   50%      { color: #FF6B6B; }
 }
 
+/* Home: gentle upward bob on the ENTER button */
+@keyframes enterBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
 /* Respect reduced-motion: neutralize keyframe animations; CSS transitions (Speed timer bar) stay intact */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

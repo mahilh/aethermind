@@ -3,9 +3,20 @@
 // T1: implement cosmic portal design (see T1_BOOT.md Task 1)
 // Stars from STARS constant · gold ◉ portal · gradient title · player name input · XP bar
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { STARS, ATTRS } from '../lib/constants'
 import { useGameStore } from '../store/useGameStore'
+
+// Rotating esoteric wisdom (zero em dashes, commas only)
+const QUOTES = [
+  '"Not how much you know, but how clearly you see the nature of what you know."',
+  '"The universe is change, our life is what our thoughts make it."',
+  '"As within, so without. As above, so below."',
+  '"Seek not outside yourself. The source of all light is within."',
+  '"Through every answer, the question deepens."',
+  '"Knowledge without wisdom is like water poured into sand."',
+  '"The initiate sees what others walk past."',
+]
 
 function Stars() {
   return (
@@ -26,6 +37,16 @@ export default function HomeScreen({ stats, playerName, onBegin }) {
   const [name, setName] = useState(playerName || '')
   const acc = stats.answered ? Math.round(stats.correct/stats.answered*100) : 0
   const xpPct = Math.min(100, (stats.xp/stats.xpToNext)*100)
+  const [quoteIdx, setQuoteIdx] = useState(0)
+  const [quoteVisible, setQuoteVisible] = useState(true)
+  useEffect(() => {
+    let inner
+    const id = setInterval(() => {
+      setQuoteVisible(false)
+      inner = setTimeout(() => { setQuoteIdx(q => (q + 1) % QUOTES.length); setQuoteVisible(true) }, 500)
+    }, 6000)
+    return () => { clearInterval(id); clearTimeout(inner) }
+  }, [])
 
   const F = '"EB Garamond","Georgia",serif'
   const TEXT = '#E8D9C0'
@@ -58,7 +79,7 @@ export default function HomeScreen({ stats, playerName, onBegin }) {
         </div>
         {/* XP bar */}
         <div style={{height:'5px',background:'rgba(255,255,255,0.08)',borderRadius:'3px',overflow:'hidden',marginBottom:'0.4rem'}}>
-          <div style={{height:'100%',borderRadius:'3px',background:'linear-gradient(90deg,#7B2FBE,#D4AF37)',width:xpPct+'%',transition:'width 0.6s ease'}}/>
+          <div style={{height:'100%',borderRadius:'3px',background:'linear-gradient(90deg,#7B2FBE,#D4AF37,#F0C040,#D4AF37,#7B2FBE)',backgroundSize:'200% 100%',animation:'shimmer 3s linear infinite',width:xpPct+'%',transition:'width 0.6s ease'}}/>
         </div>
         <p style={{fontSize:'0.62rem',color:'rgba(232,217,192,0.28)',marginBottom:'1.5rem',letterSpacing:'0.08em'}}>{stats.xp}/{stats.xpToNext} XP, Level {stats.level+1}</p>
         {/* Player name */}
@@ -69,14 +90,16 @@ export default function HomeScreen({ stats, playerName, onBegin }) {
           placeholder="Enter your name (optional)"
           style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(212,175,55,0.3)',borderRadius:'8px',padding:'0.75rem 1rem',color:TEXT,fontSize:'0.9rem',marginBottom:'1.25rem',outline:'none',textAlign:'center'}}
         />
-        {/* Begin */}
-        <button onClick={handleBegin} style={{background:'linear-gradient(135deg,#7B2FBE,#D4AF37)',border:'none',borderRadius:'10px',padding:'1rem 3rem',fontSize:'0.98rem',color:'#050510',fontWeight:'bold',cursor:'pointer',fontFamily:F,letterSpacing:'0.13em',boxShadow:'0 0 40px #9B59B640',transition:'transform 0.2s,box-shadow 0.2s',width:'100%'}}
-          onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.03)';e.currentTarget.style.boxShadow='0 0 60px #9B59B670'}}
-          onMouseLeave={e=>{e.currentTarget.style.transform='scale(1)';e.currentTarget.style.boxShadow='0 0 40px #9B59B640'}}>
-          ENTER THE AETHERMIND
-        </button>
-        <p style={{marginTop:'1.8rem',fontSize:'0.75rem',color:'rgba(232,217,192,0.28)',lineHeight:'1.75',fontStyle:'italic'}}>
-          "Not how much you know, but how clearly you see the nature of what you know."
+        {/* Begin (gentle bob on a wrapper so it does not fight the hover scale on the button) */}
+        <div style={{animation:'enterBob 3s ease-in-out infinite'}}>
+          <button onClick={handleBegin} style={{background:'linear-gradient(135deg,#7B2FBE,#D4AF37)',border:'none',borderRadius:'10px',padding:'1rem 3rem',fontSize:'0.98rem',color:'#050510',fontWeight:'bold',cursor:'pointer',fontFamily:F,letterSpacing:'0.13em',boxShadow:'0 0 40px #9B59B640',transition:'transform 0.2s,box-shadow 0.2s',width:'100%'}}
+            onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.03)';e.currentTarget.style.boxShadow='0 0 60px #9B59B670'}}
+            onMouseLeave={e=>{e.currentTarget.style.transform='scale(1)';e.currentTarget.style.boxShadow='0 0 40px #9B59B640'}}>
+            ENTER THE AETHERMIND
+          </button>
+        </div>
+        <p style={{marginTop:'1.8rem',fontSize:'0.75rem',color:'rgba(232,217,192,0.28)',lineHeight:'1.75',fontStyle:'italic',minHeight:'2.6em',opacity:quoteVisible?1:0,transition:'opacity 0.5s ease'}}>
+          {QUOTES[quoteIdx]}
         </p>
       </div>
     </div>
