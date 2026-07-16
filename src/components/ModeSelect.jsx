@@ -43,6 +43,7 @@ export default function ModeSelect({ onModeSelect, nav }) {
                   background: on ? '#0D0A1A' : '#0A0A1A',
                   border: on ? '1px solid transparent' : '1px solid rgba(212,175,55,0.2)',
                   boxShadow: on ? `0 0 0 2px ${GOLD}, 0 0 0 4px #04040A, 0 0 0 6px ${GOLD}` : 'none',
+                  animation: on ? 'selectedPulse 2s ease-in-out infinite' : undefined,
                   transition:'border-color 0.16s, box-shadow 0.16s, background 0.16s',
                 }}
                 onMouseEnter={e=>{ if(!on){ e.currentTarget.style.borderColor='rgba(212,175,55,0.5)'; e.currentTarget.style.boxShadow=`0 0 16px ${GOLD}24` } }}

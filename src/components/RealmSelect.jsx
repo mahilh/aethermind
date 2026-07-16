@@ -46,8 +46,8 @@ export default function RealmSelect({ stats, learningCardsCount, onPick, nav }) 
             const dailyGlow = '0 0 0 1px #D4AF37, 0 0 16px rgba(212,175,55,0.3)'
             return (
               <button key={r.id} onClick={()=>onPick(r)} style={{position:'relative',background:`${r.color}0d`,border:`1px solid ${r.color}30`,borderRadius:'12px',padding:'1.1rem',cursor:'pointer',textAlign:'left',fontFamily:F,color:TEXT,transition:'border-color 0.18s,box-shadow 0.18s,transform 0.15s',...(isDaily&&{boxShadow:dailyGlow})}}
-                onMouseEnter={e=>{e.currentTarget.style.borderColor=r.color;e.currentTarget.style.boxShadow=`0 0 18px ${r.color}30`;e.currentTarget.style.transform='translateY(-2px)'}}
-                onMouseLeave={e=>{e.currentTarget.style.borderColor=`${r.color}30`;e.currentTarget.style.boxShadow=isDaily?dailyGlow:'none';e.currentTarget.style.transform='translateY(0)'}}>
+                onMouseEnter={e=>{e.currentTarget.style.borderColor=r.color;e.currentTarget.style.boxShadow=`0 0 18px ${r.color}30`;e.currentTarget.style.transform='scale(1.02)';const nm=e.currentTarget.querySelector('.realm-name');if(nm)nm.style.color='#F0C040'}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor=`${r.color}30`;e.currentTarget.style.boxShadow=isDaily?dailyGlow:'none';e.currentTarget.style.transform='scale(1)';const nm=e.currentTarget.querySelector('.realm-name');if(nm)nm.style.color=r.color}}>
                 {r.imageUrl&&<div aria-hidden="true" style={{position:'absolute',inset:0,backgroundImage:`url(${r.imageUrl})`,backgroundSize:'cover',backgroundPosition:'center',borderRadius:'inherit',opacity:0.18}}/>}
                 <div aria-hidden="true" style={{position:'absolute',inset:0,background:'rgba(4,4,10,0.75)',borderRadius:'inherit'}}/>
                 {isDaily&&<div style={{position:'absolute',top:'-1px',right:'-1px',fontFamily:'"Press Start 2P",monospace',fontSize:'9px',color:'#04040A',background:'#D4AF37',padding:'3px 6px',borderRadius:'0 8px 0 6px',letterSpacing:'0.05em',zIndex:10}}>TODAY</div>}
@@ -55,7 +55,7 @@ export default function RealmSelect({ stats, learningCardsCount, onPick, nav }) 
                   <span style={{fontSize:'1.55rem',lineHeight:1,color:r.color,filter:`drop-shadow(0 0 6px ${r.color}60)`}}>{r.glyph}</span>
                   {pct!==null&&<span style={{fontSize:'0.68rem',padding:'0.12rem 0.48rem',borderRadius:'20px',background:pct>=70?'#4ADE8020':pct>=50?'#FCD34D20':'#F8717120',color:pct>=70?'#4ADE80':pct>=50?'#FCD34D':'#F87171',border:`1px solid ${pct>=70?'#4ADE8040':pct>=50?'#FCD34D40':'#F8717140'}`}}>{pct}%</span>}
                 </div>
-                <div style={{position:'relative',zIndex:1,fontFamily:'var(--font-question)',fontSize:'16px',fontWeight:'bold',color:r.color,marginBottom:'0.28rem'}}>{r.name}</div>
+                <div className="realm-name" style={{position:'relative',zIndex:1,fontFamily:'var(--font-question)',fontSize:'16px',fontWeight:'bold',color:r.color,marginBottom:'0.28rem',transition:'color 0.15s ease'}}>{r.name}</div>
                 <div style={{position:'relative',zIndex:1,fontFamily:'var(--font-wisdom)',fontSize:'13px',color:MUTED,lineHeight:'1.4'}}>{r.desc}</div>
               </button>
             )

@@ -118,6 +118,12 @@ input  { font-family:var(--font-serif); }
   50%      { opacity: 0.7; }
 }
 
+/* ModeSelect: selected mode card double-pixel border pulses gold -> bright gold */
+@keyframes selectedPulse {
+  0%, 100% { box-shadow: 0 0 0 2px #D4AF37, 0 0 0 4px #04040A, 0 0 0 6px #D4AF37; }
+  50%      { box-shadow: 0 0 0 2px #F0C040, 0 0 0 4px #04040A, 0 0 0 6px #F0C040, 0 0 12px rgba(212,175,55,0.4); }
+}
+
 /* Respect reduced-motion: neutralize keyframe animations; CSS transitions (Speed timer bar) stay intact */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
