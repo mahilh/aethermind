@@ -1,7 +1,10 @@
 // AetherMind: GauntletComplete screen (Realm Gauntlet, 10 cleared) · T1 LANE
 // Rendered by QuizScreen when gauntletCount reaches 10 in Realm Gauntlet.
 // Props: { realm, sessionScore, onForgeAgain, onChooseRealm }
+import { useState, useRef, useEffect } from 'react'
 import { STARS } from '../lib/constants'
+import { useGameStore } from '../store/useGameStore'
+import { copyShareResult } from './shareResult'
 
 const F = '"EB Garamond","Georgia",serif'
 const PIXEL = "'Press Start 2P','Courier New',monospace"
@@ -27,6 +30,18 @@ export default function GauntletComplete({ realm, sessionScore, onForgeAgain, on
   const c = sessionScore?.c ?? 0
   const t = sessionScore?.t ?? 0
   const acc = t ? Math.round(c / t * 100) : 0
+  const xp = useGameStore(s => s.stats.xp)
+  const level = useGameStore(s => s.stats.level)
+  const [copied, setCopied] = useState(false)
+  const copyTimerRef = useRef(null)
+  useEffect(() => () => { if (copyTimerRef.current) clearTimeout(copyTimerRef.current) }, [])
+  const handleShare = async () => {
+    const ok = await copyShareResult({ xp, realm: realm?.name, accuracy: acc, level })
+    if (!ok) return
+    setCopied(true)
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+    copyTimerRef.current = setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#04040A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', fontFamily: F, position: 'relative', overflow: 'hidden' }}>
@@ -53,6 +68,12 @@ export default function GauntletComplete({ realm, sessionScore, onForgeAgain, on
             onMouseEnter={e => { e.currentTarget.style.background = '#12122A'; e.currentTarget.style.borderColor = 'rgba(212,175,55,0.5)' }}
             onMouseLeave={e => { e.currentTarget.style.background = '#0A0A1A'; e.currentTarget.style.borderColor = 'rgba(212,175,55,0.3)' }}
           >CHOOSE REALM</button>
+          <button
+            onClick={handleShare}
+            style={{ width: '100%', background: 'transparent', border: `1px solid ${copied ? 'rgba(212,175,55,0.4)' : 'rgba(212,175,55,0.14)'}`, borderRadius: '8px', padding: '0.7rem', fontFamily: PIXEL, fontSize: '7px', color: copied ? GOLD : 'rgba(232,217,192,0.4)', cursor: 'pointer', letterSpacing: '1px', lineHeight: '1.7', transition: 'color 0.18s, border-color 0.18s' }}
+            onMouseEnter={e => { if (!copied) { e.currentTarget.style.color = GOLD; e.currentTarget.style.borderColor = 'rgba(212,175,55,0.35)' } }}
+            onMouseLeave={e => { if (!copied) { e.currentTarget.style.color = 'rgba(232,217,192,0.4)'; e.currentTarget.style.borderColor = 'rgba(212,175,55,0.14)' } }}
+          >{copied ? 'COPIED ✓' : 'SHARE RESULT'}</button>
         </div>
       </div>
     </div>
