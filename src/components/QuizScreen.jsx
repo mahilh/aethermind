@@ -37,6 +37,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const gameMode = useGameStore(s => s.gameMode)
   const livesRemaining = useGameStore(s => s.livesRemaining)
   const gauntletCount = useGameStore(s => s.gauntletCount)
+  const currentStreak = useGameStore(s => s.currentStreak)
   const isSpeed = gameMode === 'speed'
   const isGauntlet = gameMode === 'gauntlet'
   const [timeLeft, setTimeLeft] = useState(30)
@@ -149,6 +150,11 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
       xpPopTimerRef.current = setTimeout(() => setShowXpPop(false), 1500)
     }
     onAnswer(i)
+    // Streak: increment on a correct answer, break on a wrong one (universal to every mode).
+    // A Speed-mode timeout is handled in the store (timeoutQuestion resets the streak), so we
+    // deliberately do not break it here (T2 store contract: single-sourced break on timeout).
+    if (correct) useGameStore.getState().incrementStreak()
+    else useGameStore.getState().breakStreak()
     if (gameMode === 'survival' && !correct) {
       useGameStore.getState().loseLife()
       if (useGameStore.getState().livesRemaining <= 0) setGameOver(true)
@@ -219,14 +225,28 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
             <button style={{...navBtn,color:'#6EE7B7'}} onClick={nav.leaderboard}>🌍</button>
           </div>
         </div>
-        {/* Session stats */}
+        {/* Session stats (streak badge slots between SESSION and TOTAL XP when currentStreak >= 3) */}
         <div style={{display:'flex',gap:'0.7rem',marginBottom:'1.2rem'}}>
-          {[{v:`${sessionScore.c}/${sessionScore.t}`,l:'SESSION',c:'#D4AF37'},{v:displayXp,l:'TOTAL XP',c:'#9B59B6',pixel:true},{v:acc+'%',l:'ACCURACY',c:realm.color}].map(({v,l,c,pixel})=>(
-            <div key={l} style={{flex:1,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:'14px',padding:'0.6rem',textAlign:'center'}}>
-              <div style={{color:c,fontSize:pixel?'clamp(9px,2.4vw,0.82rem)':'0.98rem',fontWeight:'bold',fontFamily:pixel?PIXEL:undefined,letterSpacing:pixel?'0.5px':undefined}}>{v}</div>
-              <div style={{fontSize:'0.58rem',color:MUTED,letterSpacing:'0.1em'}}>{l}</div>
-            </div>
-          ))}
+          {(() => {
+            const cells = [{v:`${sessionScore.c}/${sessionScore.t}`,l:'SESSION',c:'#D4AF37'},{v:displayXp,l:'TOTAL XP',c:'#9B59B6',pixel:true},{v:acc+'%',l:'ACCURACY',c:realm.color}].map(({v,l,c,pixel})=>(
+              <div key={l} style={{flex:1,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:'14px',padding:'0.6rem',textAlign:'center'}}>
+                <div style={{color:c,fontSize:pixel?'clamp(9px,2.4vw,0.82rem)':'0.98rem',fontWeight:'bold',fontFamily:pixel?PIXEL:undefined,letterSpacing:pixel?'0.5px':undefined}}>{v}</div>
+                <div style={{fontSize:'0.58rem',color:MUTED,letterSpacing:'0.1em'}}>{l}</div>
+              </div>
+            ))
+            if (currentStreak >= 3) {
+              const sc = currentStreak>=7?'#FFFFFF':currentStreak>=5?'#FFD97A':'#F59E0B'
+              const glow = currentStreak>=7?'0 0 8px #FFD97A':'none'
+              const label = currentStreak>=7?'INFERNO':currentStreak>=5?'ON FIRE':'STREAK'
+              cells.splice(1, 0, (
+                <div key="streak" title={`${label} ${currentStreak}`} style={{flexShrink:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'3px',background:'rgba(245,158,11,0.12)',border:'1px solid rgba(245,158,11,0.4)',borderRadius:'14px',padding:'0.6rem 0.55rem'}}>
+                  <div style={{fontFamily:PIXEL,fontSize:'0.82rem',fontWeight:'bold',color:sc,textShadow:glow,letterSpacing:'0.5px'}}>{currentStreak}</div>
+                  <div style={{fontFamily:PIXEL,fontSize:'6px',letterSpacing:'0.5px',color:sc,textShadow:glow}}>{label}</div>
+                </div>
+              ))
+            }
+            return cells
+          })()}
         </div>
         {/* Loading */}
         {loading&&<div style={{background:'rgba(255,255,255,0.03)',border:`1px solid ${realm.color}25`,borderRadius:'14px',padding:'4rem 2rem',textAlign:'center'}}>
