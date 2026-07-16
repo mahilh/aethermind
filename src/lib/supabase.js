@@ -65,13 +65,18 @@ export async function saveScore(playerName, stats) {
   }
 }
 
-export async function getLeaderboard() {
+export async function getLeaderboard(period = 'all') {
   if (!supabase) return []
-  const { data, error } = await supabase
+  let query = supabase
     .from('am_scores')
-    .select('player_name, level, xp, total_correct, total_answered, updated_at')
+    .select('*')
     .order('xp', { ascending: false })
     .limit(20)
+  if (period === 'week') {
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    query = query.gte('updated_at', weekAgo)
+  }
+  const { data, error } = await query
   if (error) { console.error('[Supabase] getLeaderboard:', error.message); return [] }
   return data || []
 }
