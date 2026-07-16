@@ -81,6 +81,10 @@ input  { font-family:var(--font-serif); }
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+  /* The level-up overlay fades OUT (levelUpFade ends at opacity 0) with fill-mode forwards.
+     Under the 0.01ms reset that would hold it invisible for the 2s it is mounted, hiding the
+     whole celebration from reduced-motion users. Force it shown, static; JS unmounts it at 2s. */
+  .levelup-overlay { animation: none !important; opacity: 1 !important; }
 }
 
 /* Mobile breakpoint anchor. Components size text in px/rem (rem is root-relative, so

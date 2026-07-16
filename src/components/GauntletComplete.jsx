@@ -70,6 +70,7 @@ export default function GauntletComplete({ realm, sessionScore, onForgeAgain, on
           >CHOOSE REALM</button>
           <button
             onClick={handleShare}
+            aria-live="polite"
             style={{ width: '100%', background: 'transparent', border: `1px solid ${copied ? 'rgba(212,175,55,0.4)' : 'rgba(212,175,55,0.14)'}`, borderRadius: '8px', padding: '0.7rem', fontFamily: PIXEL, fontSize: '7px', color: copied ? GOLD : 'rgba(232,217,192,0.4)', cursor: 'pointer', letterSpacing: '1px', lineHeight: '1.7', transition: 'color 0.18s, border-color 0.18s' }}
             onMouseEnter={e => { if (!copied) { e.currentTarget.style.color = GOLD; e.currentTarget.style.borderColor = 'rgba(212,175,55,0.35)' } }}
             onMouseLeave={e => { if (!copied) { e.currentTarget.style.color = 'rgba(232,217,192,0.4)'; e.currentTarget.style.borderColor = 'rgba(212,175,55,0.14)' } }}

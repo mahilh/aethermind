@@ -204,7 +204,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
     <div style={{minHeight:'100vh',background:`radial-gradient(ellipse at 50% -5%,${realm.color}18 0%,#050510 55%)`,padding:'1.25rem 1.25rem 3rem',fontFamily:F,color:TEXT,position:'relative',overflow:'hidden'}}>
       <Stars color={realm.color}/>
       {/* Level-up interrupt: full-screen celebratory flash for 2s (pointer-transparent, decorative) */}
-      {showLevelUp&&<div aria-hidden="true" style={{position:'fixed',inset:0,zIndex:1000,background:'rgba(4,4,10,0.88)',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',animation:'levelUpFade 2s ease-out forwards',pointerEvents:'none'}}>
+      {showLevelUp&&<div aria-hidden="true" className="levelup-overlay" style={{position:'fixed',inset:0,zIndex:1000,background:'rgba(4,4,10,0.88)',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',animation:'levelUpFade 2s ease-out forwards',pointerEvents:'none'}}>
         <div style={{position:'relative',textAlign:'center'}}>
           <div style={{position:'absolute',inset:'-20px',border:'2px solid #D4AF37',borderRadius:'50%',animation:'goldPulseRing 1.5s ease-out forwards'}}/>
           <div style={{fontFamily:PIXEL,fontSize:'clamp(0.7rem,3vw,1.1rem)',color:'#D4AF37',textShadow:'0 0 20px rgba(212,175,55,0.8)',animation:'levelUpScale 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',marginBottom:'12px'}}>LEVEL UP</div>
@@ -241,7 +241,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
               cells.splice(1, 0, (
                 <div key="streak" title={`${label} ${currentStreak}`} style={{flexShrink:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'3px',background:'rgba(245,158,11,0.12)',border:'1px solid rgba(245,158,11,0.4)',borderRadius:'14px',padding:'0.6rem 0.55rem'}}>
                   <div style={{fontFamily:PIXEL,fontSize:'0.82rem',fontWeight:'bold',color:sc,textShadow:glow,letterSpacing:'0.5px'}}>{currentStreak}</div>
-                  <div style={{fontFamily:PIXEL,fontSize:'6px',letterSpacing:'0.5px',color:sc,textShadow:glow}}>{label}</div>
+                  <div style={{fontSize:'0.58rem',fontWeight:'bold',letterSpacing:'0.1em',color:sc,textShadow:glow}}>{label}</div>
                 </div>
               ))
             }
