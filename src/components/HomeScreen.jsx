@@ -85,13 +85,15 @@ export default function HomeScreen({ stats, playerName, onBegin, onDaily }) {
           <div style={{height:'100%',borderRadius:'3px',background:'linear-gradient(90deg,#7B2FBE,#D4AF37,#F0C040,#D4AF37,#7B2FBE)',backgroundSize:'200% 100%',animation:'shimmer 3s linear infinite',width:xpPct+'%',transition:'width 0.6s ease'}}/>
         </div>
         <p style={{fontSize:'0.62rem',color:'rgba(232,217,192,0.28)',marginBottom:'1.5rem',letterSpacing:'0.08em'}}>{stats.xp}/{stats.xpToNext} XP, Level {stats.level+1}</p>
-        {/* Player name */}
+        {/* Player name: a ritual entry, not a form field */}
+        <p style={{fontFamily:F,fontSize:'13px',fontStyle:'italic',color:'rgba(212,175,55,0.5)',textAlign:'center',marginBottom:'6px',letterSpacing:'0.04em'}}>Who seeks the AetherMind?</p>
         <input
+          className="home-name-input"
           type="text" value={name} maxLength={20}
           onChange={e=>setName(e.target.value)}
           onKeyDown={e=>e.key==='Enter'&&handleBegin()}
-          placeholder="Enter your name (optional)"
-          style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(212,175,55,0.3)',borderRadius:'8px',padding:'0.75rem 1rem',color:TEXT,fontSize:'0.9rem',marginBottom:'1.25rem',outline:'none',textAlign:'center'}}
+          placeholder="Enter your name"
+          style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(212,175,55,0.3)',borderRadius:'8px',padding:'0.75rem 1rem',color:TEXT,fontFamily:'var(--font-question)',fontSize:'15px',letterSpacing:'0.05em',marginBottom:'1.25rem',outline:'none',textAlign:'center'}}
         />
         {/* Daily Aether: same 5 questions for everyone each day, shareable emoji grid */}
         <button onClick={onDaily} aria-label="Daily Aether challenge"
