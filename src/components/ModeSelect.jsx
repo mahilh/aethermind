@@ -17,6 +17,15 @@ function Stars() {
 // xpMult 1.0 -> "1x XP", 1.5 -> "1.5x XP", 2.0 -> "2x XP"
 const xpLabel = (m) => `${m.xpMult}x XP`
 
+// Evocative tagline per mode: flavor beneath the functional description
+const TAGLINE = {
+  classic: 'The foundation of all mastery.',
+  speed: 'Time reveals the depth of knowing.',
+  survival: 'Three chances to prove your worth.',
+  gauntlet: 'Ten trials of a single discipline.',
+  blind: 'See without the crutch of certainty.',
+}
+
 export default function ModeSelect({ onModeSelect, nav }) {
   const [selected, setSelected] = useState('classic')
 
@@ -52,6 +61,7 @@ export default function ModeSelect({ onModeSelect, nav }) {
                 <div style={{fontSize:'36px',lineHeight:1,color:GOLD,marginBottom:'0.7rem',filter:`drop-shadow(0 0 8px ${GOLD}55)`}}>{m.icon}</div>
                 <div style={{fontFamily:'var(--font-question)',fontWeight:600,fontSize:'16px',color:GOLD,letterSpacing:'0.03em',lineHeight:1.35,marginBottom:'0.55rem'}}>{m.label}</div>
                 <div style={{fontFamily:F,fontStyle:'italic',fontSize:'14px',color:MUTED,lineHeight:1.35}}>{m.desc}</div>
+                {TAGLINE[m.id]&&<div style={{fontFamily:F,fontStyle:'italic',fontSize:'12px',color:'rgba(212,175,55,0.5)',marginTop:'5px',letterSpacing:'0.03em',lineHeight:1.3}}>{TAGLINE[m.id]}</div>}
                 <span style={{position:'absolute',bottom:'0.55rem',right:'0.65rem',fontFamily:PIXEL,fontSize:'9px',color:AMBER,letterSpacing:'0.5px'}}>{xpLabel(m)}</span>
               </button>
             )
