@@ -204,7 +204,7 @@ export default function DailyAether({ nav }){
             else tc='rgba(232,217,192,0.3)'
           }
           return (
-            <button key={i} onClick={()=>answer(i)} disabled={revealed}
+            <button key={i} onClick={()=>answer(i)} disabled={revealed} aria-label={`Answer ${['A','B','C','D'][i]}: ${opt}`}
               style={{background:bg,border:`1px solid ${bdr}`,borderRadius:'10px',padding:'0.82rem 1.1rem',textAlign:'left',cursor:revealed?'default':'pointer',color:tc,fontFamily:'var(--font-question)',fontSize:'16px',lineHeight:1.6,transition:'all 0.16s',animation:anim,minHeight:'44px'}}>
               {opt}
             </button>

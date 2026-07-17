@@ -383,7 +383,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
               let anim
               if(revealed){ if(i===question.correct_index) anim='correctFlash 1s ease-out forwards'; else if(i===picked) anim='wrongShake 0.5s ease-out' }
               return (
-                <button key={i} onClick={()=>handleSelect(i)} disabled={revealed} style={{background:bg,border:`1px solid ${bdr}`,borderRadius:'10px',padding:'0.82rem 1.1rem',textAlign:'left',cursor:cur,color:tc,fontFamily:'var(--font-question)',fontSize:'17px',lineHeight:'1.7',letterSpacing:'0.01em',display:'flex',alignItems:'center',gap:'0.8rem',transition:'all 0.16s',animation:anim}}
+                <button key={i} onClick={()=>handleSelect(i)} disabled={revealed} aria-label={`Answer ${['A','B','C','D'][i]}: ${opt}`} style={{background:bg,border:`1px solid ${bdr}`,borderRadius:'10px',padding:'0.82rem 1.1rem',textAlign:'left',cursor:cur,color:tc,fontFamily:'var(--font-question)',fontSize:'17px',lineHeight:'1.7',letterSpacing:'0.01em',display:'flex',alignItems:'center',gap:'0.8rem',transition:'all 0.16s',animation:anim}}
                   onMouseEnter={e=>{if(!revealed){e.currentTarget.style.borderColor=realm.color;e.currentTarget.style.background=`${realm.color}12`}}}
                   onMouseLeave={e=>{if(!revealed){e.currentTarget.style.borderColor='rgba(255,255,255,0.09)';e.currentTarget.style.background='rgba(255,255,255,0.025)'}}}>
                   <span style={{width:'22px',height:'22px',borderRadius:'50%',border:`1px solid ${bdr}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',flexShrink:0,color:tc}}>{['A','B','C','D'][i]}</span>
