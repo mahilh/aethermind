@@ -57,13 +57,14 @@ export default function WisdomVault({ cards, onBack }) {
         {unique.length===0 ? (
           <div style={{textAlign:'center',padding:'4rem 2rem'}}>
             <div style={{fontSize:'3.5rem',marginBottom:'1.2rem',color:'#D4AF37',filter:'drop-shadow(0 0 10px rgba(212,175,55,0.4))'}}>📚</div>
-            <div style={{fontFamily:F,fontStyle:'italic',lineHeight:'1.8',fontSize:'0.95rem',color:'rgba(232,217,192,0.6)'}}>The vault fills as you learn.<br/>Every wrong answer becomes a lesson.</div>
+            <div style={{fontFamily:'var(--font-question)',fontStyle:'italic',lineHeight:'1.75',fontSize:'1.02rem',color:'#D4AF37',letterSpacing:'0.02em'}}>The vault fills as you learn.<br/>Every wrong answer becomes a lesson.</div>
           </div>
         ) : (
           sorted.map((c)=>{
             const isFlipped = !!flipped[c.id]
             return (
-              <div key={c.id} onClick={()=>toggle(c.id)} style={{background:`${c.color}08`,border:`1px solid ${c.color}25`,borderRadius:'12px',padding:'1.1rem',marginBottom:'0.72rem',cursor:'pointer',transition:'border-color 0.18s',animation:isFlipped?'cardFlip 0.5s ease':undefined}}
+              <div key={c.id} style={{animation:'fadeInUp 0.4s ease-out both'}}>
+              <div onClick={()=>toggle(c.id)} style={{background:`${c.color}08`,border:`1px solid ${c.color}25`,borderRadius:'12px',padding:'1.1rem',marginBottom:'0.72rem',cursor:'pointer',transition:'border-color 0.18s',animation:isFlipped?'cardFlip 0.5s ease':undefined}}
                 onMouseEnter={e=>e.currentTarget.style.borderColor=`${c.color}55`}
                 onMouseLeave={e=>e.currentTarget.style.borderColor=`${c.color}25`}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.6rem'}}>
@@ -85,6 +86,7 @@ export default function WisdomVault({ cards, onBack }) {
                     {c.insight&&<div style={{color:c.color,fontSize:'0.77rem',fontStyle:'italic'}}>✧ {c.insight}</div>}
                   </div>
                 )}
+              </div>
               </div>
             )
           })
