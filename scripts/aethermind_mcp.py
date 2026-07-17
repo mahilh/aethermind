@@ -113,6 +113,32 @@ def realm_stats() -> str:
     return "\n".join(lines)
 
 
+@mcp.tool()
+def get_suggestions(status: str = "pending") -> str:
+    # Community knowledge suggestions (am_suggestions). status is one of pending/reviewed/implemented.
+    if status not in ("pending", "reviewed", "implemented"):
+        status = "pending"
+    rows = rest_get(f"/rest/v1/am_suggestions?status=eq.{status}&order=submitted_at.desc&limit=50")
+    if not rows:
+        return f"No {status} suggestions found."
+    lines = []
+    for s in rows:
+        desc = s.get("description") or "no description"
+        realm = s.get("realm_name") or "any realm"
+        lines.append(f"[{s['type'].upper()}] {s['title']} (realm: {realm}, {s.get('upvotes', 0)} upvotes): {desc}")
+    return f"{len(rows)} {status} suggestions:\n" + "\n".join(lines)
+
+
+@mcp.tool()
+def top_suggestions(limit: int = 10) -> str:
+    # Pending suggestions ranked by upvotes, for deciding what to build next.
+    rows = rest_get(f"/rest/v1/am_suggestions?status=eq.pending&order=upvotes.desc&limit={int(limit)}")
+    if not rows:
+        return "No suggestions yet."
+    lines = [f"{i + 1}. [{r['type'].upper()}] {r['title']}: {r.get('upvotes', 0)} upvotes" for i, r in enumerate(rows)]
+    return "\n".join(lines)
+
+
 if __name__ == "__main__":
     print(f"AetherMind MCP starting, URL: {SUPABASE_URL[:40]}...", file=sys.stderr)
     mcp.run()
