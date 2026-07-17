@@ -7,7 +7,7 @@ A live real-time esoteric consciousness trivia RPG. Players pick from 12 realms 
 
 ## LIVE STATE (2026-07-17 · T2 verified via anon REST + live bundle)
 CONFIRMED (DB / storage / API, verified this session):
-- Site: aethermind-five.vercel.app. DB: 120 questions, 12 realms (10 each). Leaderboard am_scores: 4 rows.
+- Site: aethermind-five.vercel.app. DB: 120 questions, 12 realms (10 each). Leaderboard am_scores: 6 rows (top rows are all test entries: deploy-verify, AuditOverdrive, grant-fixed, t2-verify-live, T1Test; clean these before the Austin launch).
 - Leaderboard writes WORK: POST /api/save-score returns {"ok":true} (fixed via 005 service_role GRANT, raw fetch to PostgREST).
 - 004 lockdown APPLIED: anon SELECT on am_scores, counter-only UPDATE on am_questions.
 - Em dashes: 0 in DB (006 applied, verified across all 120 questions).
@@ -21,8 +21,10 @@ DEPLOYED CLIENT (confirmed in the live JS bundle):
 - saveScore debounced (T1 c7f4ef1): saves on level-up, every ~25 XP, and a forced save at session end; maxStreak rides along.
 
 T2 LIB / STORE (on main): getDailyRealm(), getLeaderboard(period 'all' or 'week'), currentStreak / maxStreak + incrementStreak / breakStreak (session only), timeoutQuestion breaks the streak.
+T2 ENGINE (on main, awaiting vercel --prod): wrong-answer XP set to 0 (381d29a), and game-mode XP multipliers applied in answerQuestion via GAME_MODES array lookup (classic 1x, speed 1.5x, survival 2x, gauntlet 2.5x, blind 3x; 8a1fbc8). Base correct XP is unchanged at classic 1x.
+T2 TOOLING: read-only FastMCP server scripts/aethermind_mcp.py registered at user scope and Connected (check_db, get_leaderboard, check_images, realm_stats; loads .env.local; tools become callable in a fresh session). Removed the corrupted postgres-aethermind MCP entry (it failed to connect and exposed a stale credential in plaintext; that credential must be rotated and AetherProject/.env.local repaired, both outside this repo).
 
-DEPLOY NOTE: prod is recently deployed (imageUrl fix, streak badge, daily realm all confirmed live in the bundle), but the live bundle differs from HEAD, so the newest commits may not be live yet. Rate limiting (ae2b322 + fd8efab: 50/hr per IP, hardened with x-real-ip key, bounded map, sanitized log) is api-only, so it cannot be confirmed from the client and the Vercel log / deploy APIs return 403 here. A fresh vercel --prod from HEAD (fd8efab) guarantees the rate limit and the latest UI are live. CAVEAT: 50/hr can pinch a heavy shared-NAT session; raise it (return e.n > 50 in api/save-score.js) if 429s appear.
+DEPLOY NOTE: prod is recently deployed (imageUrl fix, streak badge, daily realm all confirmed live in the bundle), but the live bundle differs from HEAD, so the newest commits may not be live yet. Rate limiting (ae2b322 + fd8efab: 50/hr per IP, hardened with x-real-ip key, bounded map, sanitized log) is api-only, so it cannot be confirmed from the client and the Vercel log / deploy APIs return 403 here. A fresh vercel --prod from HEAD (8a1fbc8) guarantees the rate limit, wrong-XP=0, the mode multipliers, and the latest UI are live. CAVEAT: 50/hr can pinch a heavy shared-NAT session; raise it (return e.n > 50 in api/save-score.js) if 429s appear.
 
 ## ANIMATION + DESIGN UPGRADE (SHIPPED 2026-07-16/17, in the live bundle)
 The arcade-feel upgrade below is implemented and deployed. Kept here as the design token reference:
