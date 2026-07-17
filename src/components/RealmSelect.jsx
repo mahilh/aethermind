@@ -3,7 +3,7 @@
 import { REALMS, STARS, getDailyRealm } from '../lib/constants'
 
 const F='"EB Garamond","Georgia",serif',TEXT='#E8D9C0',MUTED='rgba(232,217,192,0.4)'
-const navBtn={background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'8px',padding:'0.4rem 0.85rem',color:MUTED,cursor:'pointer',fontSize:'0.76rem',fontFamily:F}
+const navBtn={background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'8px',padding:'0.4rem 0.85rem',color:MUTED,cursor:'pointer',fontSize:'0.76rem',fontFamily:F,minHeight:'44px',minWidth:'44px',display:'inline-flex',alignItems:'center',justifyContent:'center'}
 
 function Stars() {
   return <div style={{position:'absolute',inset:0,pointerEvents:'none'}}>{STARS.map((s,i)=>(
@@ -24,8 +24,8 @@ export default function RealmSelect({ stats, learningCardsCount, onPick, nav }) 
           <span style={{fontSize:'0.67rem',letterSpacing:'0.25em',color:MUTED}}>CHOOSE YOUR REALM</span>
           <div style={{display:'flex',gap:'0.5rem'}}>
             <button style={{...navBtn,color:'#FB923C'}} onClick={nav.cards} aria-label="Wisdom Vault" title="Wisdom Vault">📚{learningCardsCount>0?` ${learningCardsCount}`:''}</button>
-            <button style={{...navBtn,color:'#D4AF37'}} onClick={nav.character}>◉ Lv.{stats.level}</button>
-            <button style={{...navBtn,color:'#6EE7B7'}} onClick={nav.leaderboard}>🌍</button>
+            <button style={{...navBtn,color:'#D4AF37'}} onClick={nav.character} aria-label="Consciousness Profile" title="Consciousness Profile">◉ Lv.{stats.level}</button>
+            <button style={{...navBtn,color:'#6EE7B7'}} onClick={nav.leaderboard} aria-label="Global Leaderboard" title="Global Leaderboard">🌍</button>
           </div>
         </div>
         {/* XP bar */}

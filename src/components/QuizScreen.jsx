@@ -11,7 +11,7 @@ import { initSound, playCorrect, playWrong, playLevelUp, playStreak, isMuted, se
 const F='"EB Garamond","Georgia",serif',TEXT='#E8D9C0',MUTED='rgba(232,217,192,0.4)'
 const PIXEL="'Press Start 2P','Courier New',monospace"
 const fmtTime=(s)=>`0:${String(Math.max(0,s)).padStart(2,'0')}`
-const navBtn={background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'8px',padding:'0.38rem 0.85rem',color:MUTED,cursor:'pointer',fontSize:'0.76rem',fontFamily:F}
+const navBtn={background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'8px',padding:'0.38rem 0.85rem',color:MUTED,cursor:'pointer',fontSize:'0.76rem',fontFamily:F,minHeight:'44px',minWidth:'44px',display:'inline-flex',alignItems:'center',justifyContent:'center'}
 const xpBarOuter={height:'5px',background:'rgba(255,255,255,0.08)',borderRadius:'3px',overflow:'hidden'}
 
 // image_url comes from am_questions, where anon holds UPDATE (migration 003) and
@@ -257,10 +257,14 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
               })}
             </span>}
             <button style={{...navBtn,color:'#FB923C'}} onClick={nav.cards} aria-label="Wisdom Vault" title="Wisdom Vault">📚{learningCardsCount>0?` ${learningCardsCount}`:''}</button>
-            <button style={{...navBtn,color:'#D4AF37'}} onClick={nav.character}>◉ Lv.{stats.level}</button>
-            <button style={{...navBtn,color:'#6EE7B7'}} onClick={nav.leaderboard}>🌍</button>
+            <button style={{...navBtn,color:'#D4AF37'}} onClick={nav.character} aria-label="Consciousness Profile" title="Consciousness Profile">◉ Lv.{stats.level}</button>
+            <button style={{...navBtn,color:'#6EE7B7'}} onClick={nav.leaderboard} aria-label="Global Leaderboard" title="Global Leaderboard">🌍</button>
             <button style={{...navBtn,color:muted?MUTED:'#D4AF37',padding:'0.3rem 0.5rem',fontSize:'0.9rem'}} title={muted?'Sound off':'Sound on'} aria-label={muted?'Unmute sound effects':'Mute sound effects'} onClick={()=>{const nv=!muted;persistMuted(nv);setMuted(nv)}}>{muted?'🔇':'🔊'}</button>
           </div>
+        </div>
+        {/* Screen-reader-only live region: announces correct/wrong to assistive tech on reveal (WCAG) */}
+        <div role="status" aria-live="polite" aria-atomic="true" style={{position:'absolute',width:'1px',height:'1px',padding:0,margin:'-1px',overflow:'hidden',clip:'rect(0,0,0,0)',whiteSpace:'nowrap',border:0}}>
+          {revealed ? (ok ? 'Correct. Well perceived.' : (question ? 'Not this time. The correct answer is: ' + question.options[question.correct_index] : '')) : ''}
         </div>
         {/* Realm hero banner (image behind a top-light/bottom-dark gradient, name bottom-left) */}
         <div style={{width:'100%',height:'120px',borderRadius:'10px',overflow:'hidden',marginBottom:'12px',position:'relative',flexShrink:0,backgroundImage:realm?.imageUrl?`url(${realm.imageUrl})`:'linear-gradient(135deg,#0A0A1A 0%,#150A2B 100%)',backgroundSize:'cover',backgroundPosition:'center'}}>
