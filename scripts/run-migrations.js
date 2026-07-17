@@ -1,4 +1,6 @@
-const { Client } = require('pg')
+// ESM (project is "type":"module"). pg is CommonJS, so default-import then destructure.
+import pg from 'pg'
+const { Client } = pg
 
 if (!process.env.AETHERMIND_DB) {
   console.error('AETHERMIND_DB not set, run: source ~/.zshrc')
