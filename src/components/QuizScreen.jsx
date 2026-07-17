@@ -72,6 +72,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
     if (!question) return
     timedOutRef.current = false
     setTimeLeft(30)
+    setShowTimeout(false)   // clear any prior TIME popup so the next timeout re-triggers its animation
     if (bar) {
       bar.style.transition = 'none'; bar.style.width = '100%'
       void bar.offsetWidth
@@ -251,7 +252,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const acc = stats.answered ? Math.round(stats.correct/stats.answered*100) : 0
 
   return (
-    <div style={{minHeight:'100vh',background:`radial-gradient(ellipse at 50% -5%,${realm.color}18 0%,#050510 55%)`,padding:'1.25rem 1.25rem 3rem',fontFamily:F,color:TEXT,position:'relative',overflow:'hidden'}}>
+    <div style={{minHeight:'100vh',background:`radial-gradient(ellipse at 50% -5%,${realm.color}18 0%,#050510 55%)`,padding:'1.25rem 1.25rem 3rem',fontFamily:F,color:TEXT,position:'relative',overflow:'hidden',boxShadow:gameMode==='blind'?'inset 0 0 80px rgba(123,47,190,0.07), inset 0 0 20px rgba(123,47,190,0.04)':undefined}}>
       <Stars color={realm.color}/>
       {/* Level-up interrupt: full-screen celebratory flash for 2s (pointer-transparent, decorative) */}
       {showLevelUp&&<div aria-hidden="true" className="levelup-overlay" style={{position:'fixed',inset:0,zIndex:1000,background:'rgba(4,4,10,0.88)',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',animation:'levelUpFade 2s ease-out forwards',pointerEvents:'none'}}>
@@ -265,7 +266,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
         {/* Nav (wraps at narrow widths so the control cluster is never clipped by the overflow:hidden root) */}
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'0.5rem',marginBottom:'1.2rem'}}>
           <button style={navBtn} onClick={nav.realms}>← Realms</button>
-          <span style={{color:realm.color,fontSize:'0.84rem',filter:`drop-shadow(0 0 8px ${realm.color}60)`}}>{realm.glyph} {realm.name}</span>
+          <span style={{color:realm.color,fontSize:'0.84rem',filter:`drop-shadow(0 0 8px ${realm.color}60)`}}>{realm.glyph} {realm.name}{gameMode==='blind'&&<span style={{fontFamily:PIXEL,fontSize:'9px',color:'rgba(123,47,190,0.95)',marginLeft:'8px',letterSpacing:'0.1em'}}>BLIND</span>}</span>
           <div style={{display:'flex',gap:'0.5rem',alignItems:'center',flexWrap:'wrap',justifyContent:'flex-end'}}>
             {gameMode==='survival'&&<span style={{display:'inline-flex',alignItems:'center',gap:'3px',marginRight:'0.1rem'}} title={`${livesRemaining} lives`}>
               {[0,1,2].map(i=>{
@@ -335,7 +336,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
           </div>}
           {/* Floating TIME burst on a Speed timeout (Press Start 2P, red, fades up) */}
           {showTimeout&&<div aria-hidden="true" style={{position:'absolute',top:'35%',left:'50%',transform:'translateX(-50%)',zIndex:200,pointerEvents:'none',animation:'xpFloat 1.5s ease-out forwards'}}>
-            <span style={{fontFamily:PIXEL,fontSize:'12px',color:'#FF3131',textShadow:'0 0 12px rgba(255,49,49,0.6)',whiteSpace:'nowrap',display:'block'}}>TIME</span>
+            <span style={{fontFamily:PIXEL,fontSize:'20px',color:'#FF3131',textShadow:'0 0 20px rgba(255,49,49,0.6)',letterSpacing:'0.12em',whiteSpace:'nowrap',display:'block'}}>TIME</span>
           </div>}
           {/* Realm Gauntlet progress (Q x / 10) */}
           {isGauntlet&&<div style={{marginBottom:'1rem'}}>
