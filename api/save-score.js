@@ -87,6 +87,24 @@ export default async function handler(req, res) {
   // forged negative or fractional value cannot land in the leaderboard.
   const maxStreak = Math.max(0, Math.min(Math.floor(Number(stats.maxStreak) || 0), 120))
 
+  // Plausibility guards. Defense against naive client tampering only, NOT full anti-cheat (which
+  // needs server-side scoring; correct_idx still ships to the client today). The spec's cumulative-xp
+  // bound (level-1)*100 .. level*200 was REJECTED: useGameStore stores xp PER LEVEL (it resets to the
+  // overflow on level-up and xpToNext grows x1.65), so a legit level-3+ player holds a small in-level
+  // xp and that floor would 400 nearly every real save. Instead: a curve-correct ceiling. A real
+  // player at level L never holds xp above the current xpToNext (about 100 * 1.65^(L-1)); 200 * 1.7^L
+  // sits more than 3x above that at every level and blows past the 99999 clamp past level ~15, so it
+  // cannot false-reject a real score, yet it still catches a "max out the xp" forge at a low level.
+  if (xp > 200 * Math.pow(1.7, level) + 500) {
+    console.warn('[AetherMind API] save-score: implausible xp for level', { xp, level })
+    return res.status(400).json({ error: 'Implausible score' })
+  }
+  // A best-run streak can never exceed lifetime questions answered (answered is monotonic in the
+  // store; maxStreak is a session peak, so maxStreak <= answered always holds for honest play).
+  if (maxStreak > answered) {
+    return res.status(400).json({ error: 'Invalid streak' })
+  }
+
   const realmScores = stats.realm && typeof stats.realm === 'object' ? stats.realm : {}
   const attributes  = stats.attrs && typeof stats.attrs === 'object'  ? stats.attrs  : {}
 
