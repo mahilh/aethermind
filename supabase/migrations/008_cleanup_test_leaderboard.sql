@@ -24,6 +24,7 @@ WHERE player_name IN (
   't2-final',
   'audit-verify',
   't2-verified',
+  'healthcheck-tmp',
   '<script>alert(1)</sc'
 );
 
