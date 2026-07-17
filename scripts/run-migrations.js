@@ -1,7 +1,7 @@
 const { Client } = require('pg')
 
 if (!process.env.AETHERMIND_DB) {
-  console.error('AETHERMIND_DB not set — run: source ~/.zshrc')
+  console.error('AETHERMIND_DB not set, run: source ~/.zshrc')
   process.exit(1)
 }
 
