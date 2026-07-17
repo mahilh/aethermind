@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import { persist } from 'zustand/middleware'
+import { GAME_MODES } from '../lib/constants'
 
 const INIT = {
   level:1, xp:0, xpToNext:100, correct:0, answered:0,
@@ -77,7 +78,11 @@ export const useGameStore = create(
         st.picked=idx; st.revealed=true
         const ok = idx===q.correct_index
         st.sessionScore.t+=1; if(ok) st.sessionScore.c+=1
-        const xpGain = ok ? 15+st.stats.level*3 : 0
+        // Game-mode XP multiplier. GAME_MODES is an array (T1 renders it as mode cards), so
+        // look it up by id; classic (index 0) is the 1x fallback for an unknown mode. Wrong
+        // answers stay 0, and a Speed timeout (timeoutQuestion, which never calls this) stays 0.
+        const mode = GAME_MODES.find(m => m.id === st.gameMode) || GAME_MODES[0]
+        const xpGain = ok ? Math.round((15 + st.stats.level * 3) * (mode.xpMult || 1)) : 0
         const newXP = st.stats.xp+xpGain
         const lvlUp = newXP>=st.stats.xpToNext
         st.stats.xp = lvlUp ? newXP-st.stats.xpToNext : newXP
