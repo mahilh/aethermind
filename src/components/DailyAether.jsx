@@ -20,8 +20,10 @@ const MONTHS=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV',
 // string is a string). We hash the id to an int first, then use the fractional part of a
 // sin-based hash as a stable per-day sort key. Same UTC date -> same realms -> same questions.
 function todayKey(){ return new Date().toISOString().split('T')[0] }            // YYYY-MM-DD (UTC)
+function yesterdayKey(){ const d=new Date(); d.setUTCDate(d.getUTCDate()-1); return d.toISOString().split('T')[0] }
 export function dailyLabel(){ const d=new Date(); return MONTHS[d.getUTCMonth()]+' '+d.getUTCDate() }
 function prettyDate(){ const d=new Date(); return MONTHS[d.getUTCMonth()][0]+MONTHS[d.getUTCMonth()].slice(1).toLowerCase()+' '+d.getUTCDate()+', '+d.getUTCFullYear() }
+function prettyShort(){ const d=new Date(); const m=MONTHS[d.getUTCMonth()]; return m[0]+m.slice(1).toLowerCase()+' '+d.getUTCDate() }
 function seedFrom(key){ return key.split('-').reduce((a,v)=>a*31+parseInt(v,10),0) }
 function hashStr(s){ let h=0; s=String(s); for(let i=0;i<s.length;i++){ h=(h*31+s.charCodeAt(i))|0 } return h }
 function seededSort(items, seed){
@@ -36,10 +38,25 @@ export function getDailyRecord(){
   try{ const v = JSON.parse(localStorage.getItem(DAILY_KEY)||'{}'); return (v && typeof v==='object' && !Array.isArray(v)) ? v : {} }catch{ return {} }
 }
 export function getTodayResult(){ return getDailyRecord()[todayKey()] || null }
-function saveTodayResult(res){ const r=getDailyRecord(); r[todayKey()]=res; try{ localStorage.setItem(DAILY_KEY,JSON.stringify(r)) }catch{ /* storage blocked */ } }
+function saveTodayResult(res){
+  const r=getDailyRecord()
+  // Daily completion streak: +1 if yesterday was completed too, else reset to 1. Computed once per
+  // day (completion locks re-entry to the done screen), so re-opening today never re-increments it.
+  const streak = r[yesterdayKey()] ? (r.streak||1)+1 : 1
+  res.streak = streak                 // embed in the day result so the done-view on reload shows DAY N
+  r[todayKey()]=res
+  r.streak = streak
+  try{ localStorage.setItem(DAILY_KEY,JSON.stringify(r)) }catch{ /* storage blocked */ }
+  return streak
+}
 
 const gridOf = (results) => results.map(r=>r?'🟨':'⬛').join('')
-const shareTextOf = (results) => `AetherMind Daily ${todayKey()}\n${gridOf(results)}  ${results.filter(Boolean).length}/5\n${SITE}`
+// Share text points at /#daily so a tapped link deep-links friends straight into today's challenge.
+const shareTextOf = (results, streak) => {
+  const score = results.filter(Boolean).length
+  const streakLine = streak ? `Streak: ${streak}${streak>=2?' 🔥':''}\n` : ''
+  return `AetherMind Daily · ${prettyShort()}\n${gridOf(results)}  ${score}/5\n${streakLine}${SITE}/#daily`
+}
 
 function Stars(){
   return <div style={{position:'absolute',inset:0,pointerEvents:'none'}}>{STARS.map((s,i)=>(
@@ -56,6 +73,7 @@ export default function DailyAether({ nav }){
   const [picked, setPicked] = useState(null)
   const [revealed, setRevealed] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [dailyStreak, setDailyStreak] = useState(existing?.streak || 0)
   const [loadError, setLoadError] = useState(false)
   const advRef = useRef(null)
 
@@ -88,8 +106,9 @@ export default function DailyAether({ nav }){
     advRef.current = setTimeout(() => {
       if (idx + 1 >= questions.length) {
         const res = { score: nextResults.filter(Boolean).length, emojis: gridOf(nextResults), results: nextResults }
-        saveTodayResult(res)
+        const streak = saveTodayResult(res)
         setResults(nextResults)
+        setDailyStreak(streak)
         setPhase('result')
       } else {
         setResults(nextResults)
@@ -100,8 +119,8 @@ export default function DailyAether({ nav }){
     }, 1250)
   }
 
-  const share = (results) => {
-    const text = shareTextOf(results)
+  const share = (results, streak) => {
+    const text = shareTextOf(results, streak)
     const done = () => { setCopied(true); setTimeout(() => setCopied(false), 2000) }
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(done)
@@ -120,21 +139,26 @@ export default function DailyAether({ nav }){
   )
 
   // ---- Result / already-done screen --------------------------------------------------------
-  const ResultView = ({ score, resultsArr, alreadyDone }) => (
+  const ResultView = ({ score, resultsArr, alreadyDone, streak }) => (
     <div style={{textAlign:'center'}}>
       <div style={{fontFamily:PIXEL,fontSize:'12px',color:GOLD,letterSpacing:'3px',marginBottom:'0.9rem',filter:`drop-shadow(0 0 8px ${GOLD}55)`}}>DAILY AETHER</div>
-      <div style={{fontFamily:'var(--font-question)',fontSize:'1.05rem',color:MUTED,marginBottom:'2rem'}}>{prettyDate()}</div>
+      <div style={{fontFamily:'var(--font-question)',fontSize:'1.05rem',color:MUTED,marginBottom:'1.4rem'}}>{prettyDate()}</div>
+      {/* Daily completion streak: DAY N above the score, gold->amber once the streak is alight */}
+      {streak>0 && <div style={{marginBottom:'1.6rem'}}>
+        <div style={{fontFamily:PIXEL,fontSize:'13px',color:streak>=2?'#F59E0B':GOLD,letterSpacing:'2px',textShadow:streak>=2?'0 0 10px rgba(245,158,11,0.5)':'none'}}>DAY {streak}{streak>=2?' 🔥':''}</div>
+        <div style={{fontFamily:F,fontStyle:'italic',fontSize:'0.74rem',color:MUTED,marginTop:'0.4rem'}}>of your Aether journey</div>
+      </div>}
       <div role="img" aria-label={`${score} of 5 correct`} style={{fontSize:'40px',letterSpacing:'8px',marginBottom:'1.4rem'}}>{gridOf(resultsArr)}</div>
       <div style={{fontFamily:PIXEL,fontSize:'18px',color:score>=3?'#39FF14':GOLD,letterSpacing:'2px',marginBottom:'2rem'}}>{score}/5 ASCENDED</div>
       {alreadyDone && <div style={{fontFamily:F,fontStyle:'italic',fontSize:'0.95rem',color:'rgba(232,217,192,0.6)',marginBottom:'1.8rem',lineHeight:1.7}}>You have ascended today.<br/>Come back tomorrow for a new challenge.</div>}
-      <pre style={{fontFamily:PIXEL,fontSize:'11px',lineHeight:2,color:TEXT,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.2)',borderRadius:'10px',padding:'1rem',marginBottom:'1.4rem',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{shareTextOf(resultsArr)}</pre>
-      <button onClick={()=>share(resultsArr)} style={{width:'100%',background:copied?'#39FF14':'linear-gradient(135deg,#E8C766,#D4AF37)',border:'none',borderRadius:'8px',padding:'1rem',color:'#04040A',fontFamily:PIXEL,fontSize:'11px',letterSpacing:'1.5px',cursor:'pointer',marginBottom:'0.8rem',minHeight:'44px',transition:'background 0.2s',boxShadow:`0 0 26px ${GOLD}33`}}>{copied?'COPIED!':'SHARE RESULT'}</button>
+      <pre style={{fontFamily:PIXEL,fontSize:'11px',lineHeight:2,color:TEXT,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.2)',borderRadius:'10px',padding:'1rem',marginBottom:'1.4rem',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{shareTextOf(resultsArr, streak)}</pre>
+      <button onClick={()=>share(resultsArr, streak)} style={{width:'100%',background:copied?'#39FF14':'linear-gradient(135deg,#E8C766,#D4AF37)',border:'none',borderRadius:'8px',padding:'1rem',color:'#04040A',fontFamily:PIXEL,fontSize:'11px',letterSpacing:'1.5px',cursor:'pointer',marginBottom:'0.8rem',minHeight:'44px',transition:'background 0.2s',boxShadow:`0 0 26px ${GOLD}33`}}>{copied?'COPIED!':'SHARE RESULT'}</button>
       <button onClick={nav.realms} style={{width:'100%',background:'transparent',border:`1px solid ${GOLD}55`,borderRadius:'8px',padding:'0.85rem',color:GOLD,fontFamily:PIXEL,fontSize:'10px',letterSpacing:'1px',cursor:'pointer',minHeight:'44px'}}>PLAY ALL REALMS</button>
     </div>
   )
 
-  if (phase === 'done' && existing) return wrap(<ResultView score={existing.score} resultsArr={existing.results||[]} alreadyDone />)
-  if (phase === 'result') return wrap(<ResultView score={results.filter(Boolean).length} resultsArr={results} alreadyDone={false} />)
+  if (phase === 'done' && existing) return wrap(<ResultView score={existing.score} resultsArr={existing.results||[]} streak={existing.streak || getDailyRecord().streak || 0} alreadyDone />)
+  if (phase === 'result') return wrap(<ResultView score={results.filter(Boolean).length} resultsArr={results} streak={dailyStreak} alreadyDone={false} />)
 
   if (loadError) return wrap(
     <div style={{textAlign:'center',padding:'3rem 1rem'}}>
