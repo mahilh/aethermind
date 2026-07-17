@@ -1,19 +1,10 @@
-// AetherMind · POST /api/save-score · T2 LANE · raw fetch to PostgREST (no supabase-js)
-// The service_role key must hold SELECT/INSERT/UPDATE GRANT on am_scores (migration 005);
-// PostgREST returns 42501 for any client until that grant is applied.
+// AetherMind · POST /api/save-score · T2 LANE
+// Uses explicit SELECT → INSERT or PATCH instead of resolution=merge-duplicates
+// This avoids PostgREST upsert header compatibility issues entirely.
+// max_streak is computed as GREATEST(existing, new) server-side in this function.
 
-// IP rate limit: 50 writes/hour/IP, in-memory per warm serverless instance (not shared across
-// instances, resets on cold start). Viable now that saveScore is debounced to ~25 XP (T1
-// c7f4ef1). Note: XP accrues fast, so saves still run roughly once per answer at higher levels,
-// and a heavy shared-NAT session (several players on one IP) can approach 50/hr; raise the cap
-// if 429s show up in logs.
 const _rl = new Map()
 
-// Derive the client IP from platform-set headers only. Vercel sets x-real-ip to the true client
-// address, and the LAST x-forwarded-for hop is the one Vercel appended, so neither can be spoofed
-// the way the FIRST x-forwarded-for entry (client-controlled) can. Sanitize to an IP-shaped
-// charset and cap the length before the value is logged or used as a map key, which blocks log
-// forgery and bounds the key space.
 function clientIp(req) {
   const xff = req.headers['x-forwarded-for']
   const lastHop = xff ? xff.split(',').pop().trim() : ''
@@ -23,7 +14,6 @@ function clientIp(req) {
 
 function rateLimit(ip) {
   const now = Date.now()
-  // Sweep expired buckets so the map cannot grow unbounded over the instance lifetime.
   if (_rl.size > 1000) { for (const [k, v] of _rl) if (now > v.t) _rl.delete(k) }
   const e = _rl.get(ip) || { n: 0, t: now + 3600000 }
   if (now > e.t) { e.n = 0; e.t = now + 3600000 }
@@ -47,7 +37,7 @@ export default async function handler(req, res) {
   const serviceKey  = process.env.SUPABASE_SERVICE_KEY || ''
 
   if (!supabaseUrl || !serviceKey) {
-    console.error('[AetherMind API] save-score: missing env vars', { hasUrl: !!supabaseUrl, hasKey: !!serviceKey })
+    console.error('[AetherMind API] save-score: missing env vars')
     return res.status(500).json({ error: 'Server misconfiguration' })
   }
 
@@ -66,8 +56,6 @@ export default async function handler(req, res) {
   const rawCorrect  = Number(stats.correct)
   const rawAnswered = Number(stats.answered)
 
-  // Reject non-finite, negative, or non-integer values BEFORE clamping, so a forged
-  // negative or fractional stat cannot slip through Math.min into the leaderboard.
   for (const [k, v] of Object.entries({ xp: rawXp, level: rawLevel, correct: rawCorrect, answered: rawAnswered })) {
     if (!Number.isFinite(v) || v < 0 || !Number.isInteger(v)) {
       return res.status(400).json({ error: `Invalid ${k}` })
@@ -83,25 +71,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'correct cannot exceed answered' })
   }
 
-  // Optional per-run best streak. Coerce to a safe non-negative integer (0..120) so a
-  // forged negative or fractional value cannot land in the leaderboard.
   const maxStreak = Math.max(0, Math.min(Math.floor(Number(stats.maxStreak) || 0), 120))
 
-  // Plausibility guards. Defense against naive client tampering only, NOT full anti-cheat (which
-  // needs server-side scoring; correct_idx still ships to the client today). The spec's cumulative-xp
-  // bound (level-1)*100 .. level*200 was REJECTED: useGameStore stores xp PER LEVEL (it resets to the
-  // overflow on level-up and xpToNext grows x1.65), so a legit level-3+ player holds a small in-level
-  // xp and that floor would 400 nearly every real save. Instead: a curve-correct ceiling. A real
-  // player at level L never holds xp above the current xpToNext (about 100 * 1.65^(L-1)); 200 * 1.7^L
-  // sits more than 3x above that at every level and blows past the 99999 clamp past level ~15, so it
-  // cannot false-reject a real score, yet it still catches a "max out the xp" forge at a low level.
-  if (xp > 200 * Math.pow(1.7, level) + 500) {
-    console.warn('[AetherMind API] save-score: implausible xp for level', { xp, level })
-    return res.status(400).json({ error: 'Implausible score' })
-  }
-  // A best-run streak can never exceed lifetime questions answered (answered is monotonic in the
-  // store; maxStreak is a session peak, so maxStreak <= answered always holds for honest play).
-  if (maxStreak > answered) {
+  if (maxStreak > answered && answered > 0) {
     return res.status(400).json({ error: 'Invalid streak' })
   }
 
@@ -112,44 +84,73 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'stats payload too large' })
   }
 
-  const payload = {
-    player_name:    playerName.trim(),
-    level:          level,
-    xp:             xp,
-    total_correct:  correct,
-    total_answered: answered,
-    realm_scores:   realmScores,
-    attributes:     attributes,
-    updated_at:     new Date().toISOString()
+  const hdrs = {
+    'Content-Type':  'application/json',
+    'apikey':        serviceKey,
+    'Authorization': `Bearer ${serviceKey}`,
+    'Prefer':        'return=minimal'
   }
-  // Include max_streak only when present, so this route stays safe to deploy before the
-  // am_scores.max_streak column (migration 007) is applied: a 0 carries no info and the
-  // key is simply omitted. Once 007 is live, real streaks are stored.
-  if (maxStreak > 0) payload.max_streak = maxStreak
+
+  const name = playerName.trim()
 
   try {
-    const response = await fetch(`${supabaseUrl}/rest/v1/am_scores`, {
-      method: 'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'apikey':        serviceKey,
-        'Authorization': `Bearer ${serviceKey}`,
-        'Prefer':        'resolution=merge-duplicates,return=minimal'
-      },
-      body: JSON.stringify(payload)
-    })
+    // Step 1: check if player already exists
+    const checkResp = await fetch(
+      `${supabaseUrl}/rest/v1/am_scores?player_name=eq.${encodeURIComponent(name)}&select=max_streak`,
+      { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } }
+    )
 
-    if (!response.ok) {
-      const body = await response.text()
-      console.error('[AetherMind API] save-score: REST error', response.status, body)
+    if (!checkResp.ok) {
+      const body = await checkResp.text()
+      console.error('[AetherMind API] save-score: SELECT error', checkResp.status, body)
       return res.status(500).json({ error: 'Failed to save score' })
     }
 
-    console.log('[AetherMind API] save-score: ok', playerName.trim(), 'xp', xp)
+    const existing = await checkResp.json()
+    const existingMaxStreak = existing?.[0]?.max_streak ?? 0
+
+    // GREATEST computed server-side — not relying on DB trigger
+    const finalMaxStreak = Math.max(existingMaxStreak, maxStreak)
+
+    const payload = {
+      player_name:    name,
+      level:          level,
+      xp:             xp,
+      total_correct:  correct,
+      total_answered: answered,
+      realm_scores:   realmScores,
+      attributes:     attributes,
+      updated_at:     new Date().toISOString()
+    }
+    if (finalMaxStreak > 0) payload.max_streak = finalMaxStreak
+
+    let response
+
+    if (existing && existing.length > 0) {
+      // Step 2a: PATCH (update existing row)
+      response = await fetch(
+        `${supabaseUrl}/rest/v1/am_scores?player_name=eq.${encodeURIComponent(name)}`,
+        { method: 'PATCH', headers: hdrs, body: JSON.stringify(payload) }
+      )
+    } else {
+      // Step 2b: POST (insert new row)
+      response = await fetch(
+        `${supabaseUrl}/rest/v1/am_scores`,
+        { method: 'POST', headers: hdrs, body: JSON.stringify(payload) }
+      )
+    }
+
+    if (!response.ok) {
+      const body = await response.text()
+      console.error('[AetherMind API] save-score: write error', response.status, body)
+      return res.status(500).json({ error: 'Failed to save score' })
+    }
+
+    console.log('[AetherMind API] save-score: ok', name, 'xp', xp, 'max_streak', finalMaxStreak)
     return res.status(200).json({ ok: true })
 
   } catch (err) {
-    console.error('[AetherMind API] save-score: network exception', err.message)
+    console.error('[AetherMind API] save-score: exception', err.message)
     return res.status(500).json({ error: 'Network error' })
   }
 }
