@@ -99,13 +99,28 @@ export const useGameStore = create(
           if([11,2].includes(realm.id))   st.stats.attrs.pattern=Math.min(100,st.stats.attrs.pattern+0.8)
           if([9,12,4].includes(realm.id)) st.stats.attrs.compassion=Math.min(100,st.stats.attrs.compassion+0.8)
         }
-        if(!ok) st.learningCards.push({
-          id:Date.now(), question:q.question,
-          wrong:q.options[idx], correct:q.options[q.correct_index],
-          explanation:q.explanation, insight:q.insight,
-          realm:realm.name, color:realm.color, kt:q.knowledge_type,
-          date:new Date().toLocaleDateString(),
-        })
+        if(!ok){
+          // Root-cause dedup at the push site: one learning card per question. Match by the
+          // canonical question id (q.db_id) as T1 requested, falling back to question text so
+          // cards persisted before qid existed still dedup instead of duplicating. On a repeat
+          // miss, refresh the card content + date in place but keep the original card id so a
+          // React list keyed on card.id does not remount/jump.
+          const newCard = {
+            id:Date.now(), qid:q.db_id, question:q.question,
+            wrong:q.options[idx], correct:q.options[q.correct_index],
+            explanation:q.explanation, insight:q.insight,
+            realm:realm.name, color:realm.color, kt:q.knowledge_type,
+            date:new Date().toLocaleDateString(),
+          }
+          const existingIdx = st.learningCards.findIndex(
+            c => (c.qid && c.qid === newCard.qid) || c.question === newCard.question
+          )
+          if (existingIdx >= 0) {
+            st.learningCards[existingIdx] = { ...newCard, id: st.learningCards[existingIdx].id }
+          } else {
+            st.learningCards.push(newCard)
+          }
+        }
       }),
     })),
     { name:'am-game-v1', partialize:(st)=>({playerName:st.playerName,stats:st.stats,learningCards:st.learningCards,seenQuestions:st.seenQuestions}) }
