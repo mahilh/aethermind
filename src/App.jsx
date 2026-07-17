@@ -181,7 +181,15 @@ export default function App() {
       if (!next) return   // unknown fragment (e.g. the #main-content skip-link target): not a screen, ignore
       const s = useGameStore.getState()
       if (next === s.screen) return
-      if (next === 'quiz' && !s.realm) { setScreen('realm-select'); return }
+      if (next === 'quiz' && !s.realm) {
+        // Quiz needs a realm (loaded via realm-select); realm is null e.g. after an F5 mid-quiz.
+        // Redirect there and REPLACE the #quiz entry with #realm (not push) so the URL matches the
+        // shown screen even when setScreen no-ops (already on realm-select), and so Back never traps
+        // on the realm-less #quiz entry.
+        setScreen('realm-select')
+        history.replaceState(null, '', '#realm')
+        return
+      }
       setScreen(next)
     }
     window.addEventListener('hashchange', onHash)
