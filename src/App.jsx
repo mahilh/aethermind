@@ -141,6 +141,14 @@ export default function App() {
     return () => unsubscribeLeaderboard(ch)
   }, [screen, setLeaderboard])
 
+  // ── Cinzel warm-up ────────────────────────────────────────────
+  // Paired with the <link rel=preload> in index.html: the preload caches the woff2 during HTML parse,
+  // this actively loads it into the FontFace set so Cinzel is fully ready before the quiz renders,
+  // killing the flash of the EB Garamond fallback (and making document.fonts.check('1em Cinzel') true).
+  useEffect(() => {
+    if (document.fonts?.load) { document.fonts.load('1em Cinzel'); document.fonts.load('600 1em Cinzel') }
+  }, [])
+
   // ── Hash routing ──────────────────────────────────────────────
   // hashReady gates the screen->hash sync until after the one-time deep-link adopt below, so the
   // sync can never clobber an incoming /#daily before it is read (this ordering is also what makes
