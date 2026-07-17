@@ -5,7 +5,7 @@ import { KNOWLEDGE_TYPES, STARS, GAME_MODES } from '../lib/constants'
 import { useGameStore } from '../store/useGameStore'
 import GameOver from './GameOver'
 import GauntletComplete from './GauntletComplete'
-import { initSound, playCorrect, playWrong, playLevelUp, playStreak, isMuted, setMuted as persistMuted } from './SoundEngine'
+import { initSound, playCorrect, playWrong, playLevelUp, playStreak, isMuted, setMuted as persistMuted, getAudioCtx, aetherMusic } from './SoundEngine'
 
 const F='"EB Garamond","Georgia",serif',TEXT='#E8D9C0',MUTED='rgba(232,217,192,0.4)'
 const PIXEL="'Press Start 2P','Courier New',monospace"
@@ -97,6 +97,18 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
     const adv = setTimeout(() => onNext(), 2000)
     return () => clearTimeout(adv)
   }, [revealed, isSpeed, onNext])
+
+  // Ambient solfeggio drone: unlock the shared audio context (the realm-select click is the gesture)
+  // then ramp the hum to this realm's frequency over 3s. init is idempotent; setRealm no-ops until
+  // initialized, and if the resume is autoplay-blocked here the first answer's initSound recovers it.
+  useEffect(() => {
+    if (!realm) return
+    initSound().then(() => {
+      aetherMusic.init(getAudioCtx())
+      aetherMusic.setRealm(realm.name)
+      aetherMusic.setMuted(isMuted())
+    })
+  }, [realm])
 
   // XP counter arcade tick: count the TOTAL XP stat from what is on screen up to the new value over ~600ms.
   // Start from the currently displayed value (displayXpRef) so an interrupted tick never snaps backward, and
@@ -278,7 +290,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
             <button style={{...navBtn,color:'#FB923C'}} onClick={nav.cards} aria-label="Wisdom Vault" title="Wisdom Vault">📚{learningCardsCount>0?` ${learningCardsCount}`:''}</button>
             <button style={{...navBtn,color:'#D4AF37'}} onClick={nav.character} aria-label="Consciousness Profile" title="Consciousness Profile">◉ Lv.{stats.level}</button>
             <button style={{...navBtn,color:'#6EE7B7'}} onClick={nav.leaderboard} aria-label="Global Leaderboard" title="Global Leaderboard">🌍</button>
-            <button style={{...navBtn,color:muted?MUTED:'#D4AF37',padding:'0.3rem 0.5rem',fontSize:'0.9rem'}} title={muted?'Sound off':'Sound on'} aria-label={muted?'Unmute sound effects':'Mute sound effects'} onClick={()=>{const nv=!muted;persistMuted(nv);setMuted(nv)}}>{muted?'🔇':'🔊'}</button>
+            <button style={{...navBtn,color:muted?MUTED:'#D4AF37',padding:'0.3rem 0.5rem',fontSize:'0.9rem'}} title={muted?'Sound off':'Sound on'} aria-label={muted?'Unmute sound effects':'Mute sound effects'} onClick={()=>{const nv=!muted;persistMuted(nv);setMuted(nv);aetherMusic.setMuted(nv)}}>{muted?'🔇':'🔊'}</button>
           </div>
         </div>
         {/* Screen-reader-only live region: announces correct/wrong to assistive tech on reveal (WCAG) */}

@@ -80,3 +80,95 @@ export function playStreak(streakCount) {
   const note = notes[Math.min(Math.max(streakCount - 3, 0), notes.length - 1)]
   beep(note, 'square', 0, 0.08, 0.16)
 }
+
+// Shared AudioContext accessor: the ambient music engine reuses the chiptune context (one context,
+// one gesture-unlock) instead of spawning a second one that would need its own resume.
+export function getAudioCtx() { return ctx }
+
+// Continuous solfeggio ambient drone layered under the chiptune SFX. Four barely-audible harmonics
+// that ramp to a per-realm solfeggio frequency over 3s. Additive: it never touches the SFX above.
+class AetherMusicEngine {
+  constructor() {
+    this.ctx = null
+    this.nodes = []
+    this.masterGain = null
+    this.currentFreq = 528
+    this.muted = false
+    this.initialized = false
+  }
+
+  async init(audioCtx) {
+    if (this.initialized) return
+    this.ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)()
+    if (this.ctx.state === 'suspended') await this.ctx.resume()
+    this.masterGain = this.ctx.createGain()
+    this.masterGain.gain.setValueAtTime(this.muted ? 0 : 0.035, this.ctx.currentTime)
+    this.masterGain.connect(this.ctx.destination)
+    this._buildLayers(this.currentFreq)
+    this.initialized = true
+  }
+
+  _buildLayers(freq) {
+    this.nodes.forEach(n => { try { n.stop() } catch (e) { /* already stopped */ } })
+    this.nodes = []
+    const ctx = this.ctx
+    const now = ctx.currentTime
+    const specs = [
+      { type: 'sine', mult: 1, vol: 0.50 },
+      { type: 'triangle', mult: 1.5, vol: 0.25 },
+      { type: 'sine', mult: 2, vol: 0.15 },
+      { type: 'triangle', mult: 3, vol: 0.07 },
+    ]
+    specs.forEach(({ type, mult, vol }) => {
+      const osc = ctx.createOscillator()
+      const g = ctx.createGain()
+      osc.type = type
+      osc.frequency.setValueAtTime(freq * mult, now)
+      g.gain.setValueAtTime(vol * 0.08, now)
+      osc.connect(g)
+      g.connect(this.masterGain)
+      osc.start(now)
+      this.nodes.push(osc)
+    })
+  }
+
+  setRealm(realmName) {
+    const freqMap = {
+      'Ancient Civilizations': 963,
+      'Hermetic Wisdom': 852,
+      'Gnosticism': 741,
+      'Eastern Traditions': 639,
+      'Consciousness': 528,
+      'Psychology': 396,
+      'Quantum Physics': 432,
+      'Esoteric Science': 285,
+      'Comparative Religion': 417,
+      'Hidden History': 174,
+      'Symbolism': 528,
+      'Ethics & Wisdom': 432,
+    }
+    const target = freqMap[realmName] || 528
+    if (!this.initialized || target === this.currentFreq) return
+    const now = this.ctx.currentTime
+    const mults = [1, 1.5, 2, 3]
+    this.nodes.forEach((osc, i) => {
+      osc.frequency.linearRampToValueAtTime(target * mults[i], now + 3)
+    })
+    this.currentFreq = target
+  }
+
+  setMuted(muted) {
+    this.muted = muted
+    if (!this.masterGain) return
+    const now = this.ctx.currentTime
+    this.masterGain.gain.setTargetAtTime(muted ? 0 : 0.035, now, 0.3)
+  }
+
+  stop() {
+    this.nodes.forEach(n => { try { n.stop() } catch (e) { /* already stopped */ } })
+    this.nodes = []
+    this.initialized = false
+  }
+}
+
+export const aetherMusic = new AetherMusicEngine()
