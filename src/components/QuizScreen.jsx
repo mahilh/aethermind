@@ -1,7 +1,7 @@
 // AetherMind: QuizScreen · T1 LANE
 // Props: { realm, question, loading, error, picked, revealed, sessionScore, stats, learningCardsCount, onAnswer, onNext, onRetry, nav }
 import { useState, useEffect, useRef } from 'react'
-import { KNOWLEDGE_TYPES, STARS } from '../lib/constants'
+import { KNOWLEDGE_TYPES, STARS, GAME_MODES } from '../lib/constants'
 import { getImageUrl } from '../lib/questionSelector'
 import { useGameStore } from '../store/useGameStore'
 import GameOver from './GameOver'
@@ -49,6 +49,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const [breakingHeart, setBreakingHeart] = useState(-1)
   const [showXpPop, setShowXpPop] = useState(false)
   const [xpEarned, setXpEarned] = useState(0)
+  const [xpMult, setXpMult] = useState(1)
   const [xpPopKey, setXpPopKey] = useState(0)
   const [showLevelUp, setShowLevelUp] = useState(false)
   const [levelUpTo, setLevelUpTo] = useState(null)
@@ -162,9 +163,13 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
     // Sound: this click is the user gesture the autoplay policy requires, so init here then play.
     initSound().then(() => { if (correct) playCorrect(); else playWrong() })
     if (correct) {
-      // Match the store's correct-answer XP formula (useGameStore: 15 + level*3) so the float is truthful.
-      const gain = 15 + stats.level * 3
+      // Match the store's correct-answer XP formula EXACTLY so the float is truthful:
+      // useGameStore does Math.round((15 + level*3) * mode.xpMult). GAME_MODES is an array,
+      // so resolve by id (classic 1x / speed 1.5x / survival 2x / gauntlet 2.5x / blind 3x).
+      const mult = (GAME_MODES.find(m => m.id === gameMode)?.xpMult) || 1
+      const gain = Math.round((15 + stats.level * 3) * mult)
       setXpEarned(gain)
+      setXpMult(mult)
       setXpPopKey(k => k + 1)   // remount the pop so xpFloat replays even on back-to-back correct answers
       setShowXpPop(true)
       if (xpPopTimerRef.current) clearTimeout(xpPopTimerRef.current)
@@ -304,7 +309,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
         {question&&!loading&&<>
           {/* Floating +XP burst on a correct answer (Press Start 2P, neon green) */}
           {showXpPop&&<div key={xpPopKey} aria-hidden="true" style={{position:'absolute',top:'35%',left:'50%',transform:'translateX(-50%)',zIndex:200,pointerEvents:'none',animation:'xpFloat 1.5s ease-out forwards'}}>
-            <span style={{fontFamily:PIXEL,fontSize:'20px',color:'#39FF14',animation:'pixelGlow 0.8s ease-in-out',whiteSpace:'nowrap',display:'block'}}>+{xpEarned} XP</span>
+            <span style={{fontFamily:PIXEL,fontSize:'20px',color:'#39FF14',animation:'pixelGlow 0.8s ease-in-out',whiteSpace:'nowrap',display:'block'}}>+{xpEarned} XP{xpMult>1&&<span style={{color:'#D4AF37',marginLeft:'0.45rem',fontSize:'15px'}}>{xpMult}x!</span>}</span>
           </div>}
           {/* Floating TIME burst on a Speed timeout (Press Start 2P, red, fades up) */}
           {showTimeout&&<div aria-hidden="true" style={{position:'absolute',top:'35%',left:'50%',transform:'translateX(-50%)',zIndex:200,pointerEvents:'none',animation:'xpFloat 1.5s ease-out forwards'}}>
