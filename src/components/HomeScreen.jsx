@@ -4,7 +4,7 @@
 // Stars from STARS constant · gold ◉ portal · gradient title · player name input · XP bar
 
 import { useState, useEffect } from 'react'
-import { STARS, ATTRS } from '../lib/constants'
+import { STARS, ATTRS, REALMS } from '../lib/constants'
 import { useGameStore } from '../store/useGameStore'
 import { getTodayResult, dailyLabel } from './DailyAether'
 
@@ -41,6 +41,15 @@ export default function HomeScreen({ stats, playerName, onBegin, onDaily }) {
   const xpPct = Math.min(100, (stats.xp/stats.xpToNext)*100)
   const [quoteIdx, setQuoteIdx] = useState(0)
   const [quoteVisible, setQuoteVisible] = useState(true)
+  // Suggestion modal: offer a book/topic/teacher/tradition to POST /api/suggest (T2 endpoint)
+  const [showSuggest, setShowSuggest] = useState(false)
+  const [suggestType, setSuggestType] = useState('book')
+  const [suggestTitle, setSuggestTitle] = useState('')
+  const [suggestDesc, setSuggestDesc] = useState('')
+  const [suggestRealm, setSuggestRealm] = useState('')
+  const [suggestSuccess, setSuggestSuccess] = useState(false)
+  const [suggestBusy, setSuggestBusy] = useState(false)
+  const [suggestError, setSuggestError] = useState('')
   useEffect(() => {
     let inner
     const id = setInterval(() => {
@@ -60,9 +69,68 @@ export default function HomeScreen({ stats, playerName, onBegin, onDaily }) {
     onBegin()
   }
 
+  const handleSuggest = async () => {
+    if (suggestTitle.trim().length < 4) return
+    setSuggestBusy(true); setSuggestError('')
+    try {
+      const r = await fetch('/api/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: suggestType,
+          title: suggestTitle.trim(),
+          description: suggestDesc.trim() || undefined,
+          realmName: suggestRealm || undefined,
+          playerName: (name && name.trim()) || 'Anonymous',
+        }),
+      })
+      if (r.ok) {
+        setShowSuggest(false); setSuggestSuccess(true)
+        setSuggestTitle(''); setSuggestDesc(''); setSuggestRealm(''); setSuggestType('book')
+        setTimeout(() => setSuggestSuccess(false), 2500)
+      } else {
+        const j = await r.json().catch(() => ({}))
+        setSuggestError(j.error || 'Could not offer this. Try again.')
+      }
+    } catch {
+      setSuggestError('Connection lost. Try again.')
+    } finally {
+      setSuggestBusy(false)
+    }
+  }
+
   return (
     <div style={{minHeight:'100vh',background:'radial-gradient(ellipse at 50% -5%,#1e0640 0%,#050510 58%)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'2rem',fontFamily:F,color:TEXT,position:'relative',overflow:'hidden'}}>
       <Stars/>
+      {suggestSuccess && (
+        <div aria-live="polite" style={{position:'fixed',top:'14%',left:'50%',transform:'translateX(-50%)',zIndex:1100,fontFamily:'var(--font-question)',fontSize:'15px',color:'#D4AF37',textShadow:'0 0 16px rgba(212,175,55,0.6)',animation:'xpFloat 2.5s ease-out forwards',pointerEvents:'none',whiteSpace:'nowrap'}}>Knowledge offered to the AetherMind ◉</div>
+      )}
+      {showSuggest && (
+        <div onClick={()=>setShowSuggest(false)} style={{position:'fixed',inset:0,zIndex:1000,background:'rgba(4,4,10,0.85)',display:'flex',alignItems:'center',justifyContent:'center',padding:'1.2rem',backdropFilter:'blur(3px)'}}>
+          <div onClick={e=>e.stopPropagation()} style={{width:'100%',maxWidth:'440px',maxHeight:'90vh',overflowY:'auto',background:'#0A0A18',border:'1px solid rgba(212,175,55,0.3)',borderRadius:'14px',padding:'1.5rem',textAlign:'center',boxShadow:'0 0 50px rgba(0,0,0,0.6)'}}>
+            <div style={{fontFamily:PIXEL,fontSize:'10px',color:'#D4AF37',letterSpacing:'0.1em',marginBottom:'0.7rem'}}>OFFER KNOWLEDGE</div>
+            <div style={{fontFamily:'var(--font-question)',fontStyle:'italic',fontSize:'14px',color:'rgba(212,175,55,0.6)',marginBottom:'1.3rem',lineHeight:1.5}}>What should the AetherMind learn next?</div>
+            <div style={{display:'flex',gap:'6px',justifyContent:'center',marginBottom:'1.2rem',flexWrap:'wrap'}}>
+              {[{id:'book',icon:'📚',label:'BOOK'},{id:'topic',icon:'🌀',label:'TOPIC'},{id:'teacher',icon:'🧙',label:'TEACHER'},{id:'tradition',icon:'🕌',label:'TRADITION'},{id:'other',icon:'✦',label:'OTHER'}].map(t=>(
+                <button key={t.id} onClick={()=>setSuggestType(t.id)} style={{fontFamily:PIXEL,fontSize:'9px',padding:'9px 8px',borderRadius:'6px',cursor:'pointer',background:suggestType===t.id?'rgba(212,175,55,0.15)':'transparent',border:`1px solid ${suggestType===t.id?'#D4AF37':'rgba(212,175,55,0.2)'}`,color:suggestType===t.id?'#D4AF37':'rgba(232,217,192,0.4)',display:'flex',flexDirection:'column',alignItems:'center',gap:'5px',whiteSpace:'nowrap',transition:'all 0.15s'}}>
+                  <span style={{fontSize:'15px'}}>{t.icon}</span>{t.label}
+                </button>
+              ))}
+            </div>
+            <input value={suggestTitle} onChange={e=>setSuggestTitle(e.target.value)} maxLength={200} placeholder="Name or title..." style={{width:'100%',boxSizing:'border-box',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(212,175,55,0.3)',borderRadius:'8px',padding:'0.7rem 0.9rem',color:TEXT,fontFamily:'var(--font-question)',fontSize:'14px',marginBottom:'0.7rem',outline:'none'}}/>
+            <textarea value={suggestDesc} onChange={e=>setSuggestDesc(e.target.value)} maxLength={500} rows={3} placeholder="Brief description (optional)..." style={{width:'100%',boxSizing:'border-box',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(212,175,55,0.3)',borderRadius:'8px',padding:'0.7rem 0.9rem',color:TEXT,fontFamily:F,fontSize:'14px',marginBottom:'0.7rem',outline:'none',resize:'vertical'}}/>
+            <select value={suggestRealm} onChange={e=>setSuggestRealm(e.target.value)} style={{width:'100%',boxSizing:'border-box',background:'#0A0A18',border:'1px solid rgba(212,175,55,0.3)',borderRadius:'8px',padding:'0.7rem 0.9rem',color:TEXT,fontFamily:F,fontSize:'14px',marginBottom:'1.1rem',outline:'none'}}>
+              <option value="">Any realm</option>
+              {REALMS.map(r=><option key={r.name} value={r.name}>{r.name}</option>)}
+            </select>
+            {suggestError && <div style={{color:'#FF3131',fontSize:'0.75rem',marginBottom:'0.8rem',fontFamily:F}}>{suggestError}</div>}
+            <div style={{display:'flex',gap:'0.6rem'}}>
+              <button onClick={handleSuggest} disabled={suggestBusy||suggestTitle.trim().length<4} style={{flex:1,background:suggestTitle.trim().length<4?'rgba(212,175,55,0.2)':'linear-gradient(135deg,#E8C766,#D4AF37)',border:'none',borderRadius:'8px',padding:'0.85rem',color:'#04040A',fontFamily:PIXEL,fontSize:'9px',letterSpacing:'1px',cursor:suggestTitle.trim().length<4?'not-allowed':'pointer',minHeight:'44px'}}>{suggestBusy?'...':'SUBMIT'}</button>
+              <button onClick={()=>setShowSuggest(false)} style={{flex:1,background:'transparent',border:'1px solid rgba(212,175,55,0.2)',borderRadius:'8px',padding:'0.85rem',color:'rgba(232,217,192,0.5)',fontFamily:PIXEL,fontSize:'9px',letterSpacing:'1px',cursor:'pointer',minHeight:'44px'}}>CANCEL</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div style={{position:'relative',textAlign:'center',maxWidth:'520px',width:'100%'}}>
         {/* Portal */}
         <div style={{fontSize:'5rem',lineHeight:1,marginBottom:'1.2rem',color:'#D4AF37',filter:'drop-shadow(0 0 24px #D4AF3770)',animation:'pulse 4s ease-in-out infinite'}}>◉</div>
@@ -106,6 +174,8 @@ export default function HomeScreen({ stats, playerName, onBegin, onDaily }) {
           </span>
           <span style={{fontFamily:PIXEL,fontSize:'12px',color:dailyDone?'#39FF14':'#D4AF37',whiteSpace:'nowrap'}}>{dailyDone ? `${dailyDone.score}/5 ✓` : '▶'}</span>
         </button>
+        {/* Suggest knowledge: opens a modal to offer a book/topic/teacher/tradition to the AetherMind */}
+        <button onClick={()=>setShowSuggest(true)} style={{fontFamily:'var(--font-question)',fontSize:'12px',color:'rgba(212,175,55,0.5)',background:'transparent',border:'none',cursor:'pointer',letterSpacing:'0.08em',fontStyle:'italic',marginBottom:'1.1rem',padding:'4px'}}>✦ suggest knowledge</button>
         {/* Begin (gentle bob on a wrapper so it does not fight the hover scale on the button) */}
         <div style={{animation:'enterBob 3s ease-in-out infinite'}}>
           <button onClick={handleBegin} style={{background:'linear-gradient(135deg,#7B2FBE,#D4AF37)',border:'none',borderRadius:'10px',padding:'1rem 3rem',fontSize:'0.98rem',color:'#050510',fontWeight:'bold',cursor:'pointer',fontFamily:F,letterSpacing:'0.13em',boxShadow:'0 0 40px #9B59B640',transition:'transform 0.2s,box-shadow 0.2s',width:'100%'}}
