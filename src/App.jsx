@@ -139,11 +139,16 @@ export default function App() {
     leaderboard: () => setScreen('leaderboard'),
   }
 
+  // Unique learning-card count for the nav badge: the store can hold duplicate cards for the same
+  // question (id is a timestamp), and WisdomVault dedups by question text, so the badge dedups too
+  // to stay consistent. Store-level dedup-on-add is flagged to T2.
+  const uniqueCardCount = new Set(learningCards.map(c => c.question)).size
+
   // ── Screen routing ────────────────────────────────────────────
   if (screen === 'home')         return <HomeScreen stats={stats} playerName={playerName} onBegin={() => setScreen('mode-select')} />
   if (screen === 'mode-select')  return <ModeSelect onModeSelect={handleModeSelect} nav={nav} />
-  if (screen === 'realm-select') return <RealmSelect stats={stats} learningCardsCount={learningCards.length} onPick={handleSelectRealm} nav={nav} />
-  if (screen === 'quiz')         return <QuizScreen realm={realm} question={question} loading={loading} error={error} picked={picked} revealed={revealed} sessionScore={sessionScore} stats={stats} learningCardsCount={learningCards.length} onAnswer={handleAnswer} onNext={handleNext} onRetry={() => { setSeenIds([]); pickQuestion(realmQuestions, stats, realm, []) }} onSessionEnd={handleSessionEnd} nav={nav} />
+  if (screen === 'realm-select') return <RealmSelect stats={stats} learningCardsCount={uniqueCardCount} onPick={handleSelectRealm} nav={nav} />
+  if (screen === 'quiz')         return <QuizScreen realm={realm} question={question} loading={loading} error={error} picked={picked} revealed={revealed} sessionScore={sessionScore} stats={stats} learningCardsCount={uniqueCardCount} onAnswer={handleAnswer} onNext={handleNext} onRetry={() => { setSeenIds([]); pickQuestion(realmQuestions, stats, realm, []) }} onSessionEnd={handleSessionEnd} nav={nav} />
   if (screen === 'character')    return <CharacterSheet stats={stats} onBack={() => setScreen(realm ? 'quiz' : 'realm-select')} />
   if (screen === 'cards')        return <WisdomVault cards={learningCards} cardOpen={cardOpen} onToggle={setCardOpen} onBack={() => setScreen(realm ? 'quiz' : 'realm-select')} />
   if (screen === 'leaderboard')  return <Leaderboard leaderboard={leaderboard} playerName={playerName} onBack={() => setScreen('realm-select')} />

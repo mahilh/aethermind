@@ -23,7 +23,7 @@ export default function RealmSelect({ stats, learningCardsCount, onPick, nav }) 
           <button style={navBtn} onClick={nav.home}>← Home</button>
           <span style={{fontSize:'0.67rem',letterSpacing:'0.25em',color:MUTED}}>CHOOSE YOUR REALM</span>
           <div style={{display:'flex',gap:'0.5rem'}}>
-            {learningCardsCount>0&&<button style={{...navBtn,color:'#FB923C'}} onClick={nav.cards}>📚 {learningCardsCount}</button>}
+            <button style={{...navBtn,color:'#FB923C'}} onClick={nav.cards} aria-label="Wisdom Vault" title="Wisdom Vault">📚{learningCardsCount>0?` ${learningCardsCount}`:''}</button>
             <button style={{...navBtn,color:'#D4AF37'}} onClick={nav.character}>◉ Lv.{stats.level}</button>
             <button style={{...navBtn,color:'#6EE7B7'}} onClick={nav.leaderboard}>🌍</button>
           </div>

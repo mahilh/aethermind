@@ -22,9 +22,17 @@ export default function WisdomVault({ cards, onBack }) {
   const [flipped, setFlipped] = useState({})   // card id -> flipped (showing explanation)
   const [sortBy, setSortBy] = useState('recent')
 
-  const sorted = [...cards]
-  if (sortBy === 'recent') sorted.reverse()                                  // most recent first
-  else sorted.sort((a,b) => (KT_RANK[b.kt]||0) - (KT_RANK[a.kt]||0))          // hardest concepts first
+  // Dedup by question text: the store pushes a fresh card on every wrong answer (id is a
+  // timestamp, not the question id), so re-missing the same question would list it twice.
+  // Walk newest-first and keep only the most recent card per question. Root-cause dedup on
+  // add is a store change flagged to T2.
+  const seen = new Set()
+  const unique = []
+  for (let i = cards.length - 1; i >= 0; i--) {
+    if (!seen.has(cards[i].question)) { seen.add(cards[i].question); unique.push(cards[i]) }
+  }
+  const sorted = [...unique]                                                  // already most recent first
+  if (sortBy === 'hardest') sorted.sort((a,b) => (KT_RANK[b.kt]||0) - (KT_RANK[a.kt]||0))  // hardest concepts first
 
   const toggle = (id) => setFlipped(f => ({ ...f, [id]: !f[id] }))
 
@@ -35,10 +43,10 @@ export default function WisdomVault({ cards, onBack }) {
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.4rem'}}>
           <button style={navBtn} onClick={onBack}>← Back</button>
           <span style={{fontSize:'0.67rem',letterSpacing:'0.25em',color:MUTED}}>📚 WISDOM VAULT</span>
-          <span style={{fontSize:'0.68rem',color:MUTED}}>{cards.length} card{cards.length!==1?'s':''}</span>
+          <span style={{fontSize:'0.68rem',color:MUTED}}>{unique.length} card{unique.length!==1?'s':''}</span>
         </div>
 
-        {cards.length>0 && (
+        {unique.length>0 && (
           <div style={{display:'flex',gap:'8px',justifyContent:'center',marginBottom:'1.2rem'}}>
             {['recent','hardest'].map(s=>(
               <button key={s} onClick={()=>setSortBy(s)} style={{fontFamily:PIXEL,fontSize:'9px',color:sortBy===s?'#04040A':'#D4AF37',background:sortBy===s?'#D4AF37':'transparent',border:'1px solid rgba(212,175,55,0.5)',borderRadius:'6px',padding:'7px 12px',cursor:'pointer',transition:'all 0.2s ease'}}>{s==='recent'?'RECENT':'HARDEST'}</button>
@@ -46,7 +54,7 @@ export default function WisdomVault({ cards, onBack }) {
           </div>
         )}
 
-        {cards.length===0 ? (
+        {unique.length===0 ? (
           <div style={{textAlign:'center',padding:'4rem 2rem'}}>
             <div style={{fontSize:'3.5rem',marginBottom:'1.2rem',color:'#D4AF37',filter:'drop-shadow(0 0 10px rgba(212,175,55,0.4))'}}>📚</div>
             <div style={{fontFamily:F,fontStyle:'italic',lineHeight:'1.8',fontSize:'0.95rem',color:'rgba(232,217,192,0.6)'}}>The vault fills as you learn.<br/>Every wrong answer becomes a lesson.</div>

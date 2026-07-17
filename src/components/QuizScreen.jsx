@@ -256,7 +256,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
                 return <span key={i} style={{fontSize:'18px',display:'inline-block',color:full?'#FF3131':'rgba(255,49,49,0.2)',animation:(full&&livesRemaining===1)?'heartPulse 0.8s ease-in-out infinite':undefined}}>{full?'♥':'♡'}</span>
               })}
             </span>}
-            {learningCardsCount>0&&<button style={{...navBtn,color:'#FB923C'}} onClick={nav.cards}>📚 {learningCardsCount}</button>}
+            <button style={{...navBtn,color:'#FB923C'}} onClick={nav.cards} aria-label="Wisdom Vault" title="Wisdom Vault">📚{learningCardsCount>0?` ${learningCardsCount}`:''}</button>
             <button style={{...navBtn,color:'#D4AF37'}} onClick={nav.character}>◉ Lv.{stats.level}</button>
             <button style={{...navBtn,color:'#6EE7B7'}} onClick={nav.leaderboard}>🌍</button>
             <button style={{...navBtn,color:muted?MUTED:'#D4AF37',padding:'0.3rem 0.5rem',fontSize:'0.9rem'}} title={muted?'Sound off':'Sound on'} aria-label={muted?'Unmute sound effects':'Mute sound effects'} onClick={()=>{const nv=!muted;persistMuted(nv);setMuted(nv)}}>{muted?'🔇':'🔊'}</button>
