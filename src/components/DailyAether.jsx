@@ -30,7 +30,11 @@ function seededSort(items, seed){
 }
 
 // ---- localStorage (separate from the main game store) --------------------------------------
-export function getDailyRecord(){ try{ return JSON.parse(localStorage.getItem(DAILY_KEY)||'{}') }catch{ return {} } }
+export function getDailyRecord(){
+  // Always resolve to a plain object: getTodayResult() indexes this on the HomeScreen render path,
+  // so a corrupt localStorage value (e.g. the literal "null" or a primitive) must not throw.
+  try{ const v = JSON.parse(localStorage.getItem(DAILY_KEY)||'{}'); return (v && typeof v==='object' && !Array.isArray(v)) ? v : {} }catch{ return {} }
+}
 export function getTodayResult(){ return getDailyRecord()[todayKey()] || null }
 function saveTodayResult(res){ const r=getDailyRecord(); r[todayKey()]=res; try{ localStorage.setItem(DAILY_KEY,JSON.stringify(r)) }catch{ /* storage blocked */ } }
 
