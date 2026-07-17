@@ -47,6 +47,17 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
   const barRef = useRef(null)
   const timedOutRef = useRef(false)
   const prevLivesRef = useRef(livesRemaining)
+  // Touch hold-to-commit (2200ms = numerology master number 22): a deliberate press locks
+  // the answer so a stray tap never selects. Excluded from Speed (its timer fights a hold).
+  // Mouse / keyboard / assistive-tech still commit instantly via onClick, so this only adds
+  // intention on touch without removing the accessible path.
+  const HOLD_MS = 2200
+  const holdCommit = !isSpeed
+  const [holdIndex, setHoldIndex] = useState(null)
+  const [holdProgress, setHoldProgress] = useState(0)
+  const holdRafRef = useRef(null)
+  const holdStartRef = useRef(0)
+  const touchRef = useRef(false)   // true while a touch gesture owns the interaction (suppresses the ghost click)
 
   // Speed Oracle: on each new question, reset the timer + bar and arm a real 30s deadline; freeze the bar on reveal.
   // The deadline is a setTimeout tied to THIS question's effect lifecycle, so it can never fire on a stale
@@ -181,6 +192,28 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
       if (useGameStore.getState().gauntletCount >= 10) { setGauntletDone(true); onSessionEnd?.() }
     }
   }
+
+  // Hold-to-commit: rAF-drive a 0..1 progress over HOLD_MS; commit at 1, cancel on lift/scroll.
+  const cancelHold = () => {
+    if (holdRafRef.current) cancelAnimationFrame(holdRafRef.current)
+    holdRafRef.current = null
+    setHoldIndex(null)
+    setHoldProgress(0)
+  }
+  const startHold = (i) => {
+    if (revealed || !holdCommit) return
+    setHoldIndex(i)
+    holdStartRef.current = Date.now()
+    const tick = () => {
+      const p = Math.min((Date.now() - holdStartRef.current) / HOLD_MS, 1)
+      setHoldProgress(p)
+      if (p >= 1) { cancelHold(); handleSelect(i); setTimeout(() => { touchRef.current = false }, 400) }   // self-heal: do not depend on a later touchend to clear the guard
+      else holdRafRef.current = requestAnimationFrame(tick)
+    }
+    holdRafRef.current = requestAnimationFrame(tick)
+  }
+  const endTouch = () => { cancelHold(); setTimeout(() => { touchRef.current = false }, 400) }
+  useEffect(() => () => { if (holdRafRef.current) cancelAnimationFrame(holdRafRef.current) }, [])
 
   if (!realm) return null
 
@@ -341,15 +374,22 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
               let anim
               if(revealed){ if(i===question.correct_index) anim='correctFlash 1s ease-out forwards'; else if(i===picked) anim='wrongShake 0.5s ease-out' }
               return (
-                <button key={i} className="answer-option" onClick={()=>handleSelect(i)} disabled={revealed} aria-label={`Answer ${['A','B','C','D'][i]}: ${opt}`} style={{background:bg,border:`1px solid ${bdr}`,borderRadius:'10px',padding:'0.82rem 1.1rem',textAlign:'left',cursor:cur,color:tc,fontFamily:'var(--font-question)',fontSize:'17px',lineHeight:'1.7',letterSpacing:'0.01em',display:'flex',alignItems:'center',gap:'0.8rem',transition:'all 0.16s',animation:anim}}
+                <button key={i} className="answer-option"
+                  onClick={()=>{ if(touchRef.current) return; handleSelect(i) }}
+                  onTouchStart={holdCommit?(()=>{ touchRef.current=true; startHold(i) }):undefined}
+                  onTouchEnd={holdCommit?endTouch:undefined}
+                  onTouchCancel={holdCommit?endTouch:undefined}
+                  disabled={revealed} aria-label={`Answer ${['A','B','C','D'][i]}: ${opt}`} style={{position:'relative',overflow:'hidden',background:bg,border:`1px solid ${bdr}`,borderRadius:'10px',padding:'0.82rem 1.1rem',textAlign:'left',cursor:cur,color:tc,fontFamily:'var(--font-question)',fontSize:'17px',lineHeight:'1.7',letterSpacing:'0.01em',display:'flex',alignItems:'center',gap:'0.8rem',transition:'all 0.16s',animation:anim}}
                   onMouseEnter={e=>{if(!revealed){e.currentTarget.style.borderColor=realm.color;e.currentTarget.style.background=`${realm.color}12`}}}
                   onMouseLeave={e=>{if(!revealed){e.currentTarget.style.borderColor='rgba(255,255,255,0.09)';e.currentTarget.style.background='rgba(255,255,255,0.025)'}}}>
+                  {holdIndex===i&&<><span aria-hidden="true" style={{position:'absolute',left:0,bottom:0,height:'3px',width:`${holdProgress*100}%`,background:realm.color,boxShadow:`0 0 6px ${realm.color}`,pointerEvents:'none'}}/><span aria-hidden="true" style={{position:'absolute',bottom:'7px',right:'8px',fontFamily:PIXEL,fontSize:'9px',color:'#D4AF37',letterSpacing:'0.05em',opacity:0.9,pointerEvents:'none'}}>HOLD {Math.round(holdProgress*22)}/22</span></>}
                   <span style={{width:'22px',height:'22px',borderRadius:'50%',border:`1px solid ${bdr}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',flexShrink:0,color:tc}}>{['A','B','C','D'][i]}</span>
                   {opt}
                 </button>
               )
             })}
           </div>
+          {holdCommit && !revealed && <div className="hold-hint" style={{textAlign:'center',fontFamily:PIXEL,fontSize:'9px',color:'rgba(212,175,55,0.5)',letterSpacing:'0.1em',marginTop:'-0.5rem',marginBottom:'1.1rem'}}>HOLD TO COMMIT</div>}
           {/* Result panel */}
           {revealed&&<>
             <div style={{background:ok?'#39FF1408':'#FF313108',border:`1px solid ${ok?'#39FF1425':'#FF313125'}`,borderRadius:'14px',padding:'1.4rem',marginBottom:'0.9rem'}}>

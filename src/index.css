@@ -165,6 +165,9 @@ input  { font-family:var(--font-serif); }
   will-change: transform;
 }
 
+/* Hold-to-commit hint is touch-only guidance; hide it where a precise hover pointer (mouse) exists. */
+@media (hover: hover) and (pointer: fine) { .hold-hint { display: none; } }
+
 /* Respect reduced-motion: neutralize keyframe animations; CSS transitions (Speed timer bar) stay intact */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
