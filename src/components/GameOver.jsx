@@ -45,11 +45,12 @@ export default function GameOver({ realm, sessionScore, gameMode, onPlayAgain, o
   return (
     <div style={{ minHeight: '100vh', background: '#04040A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', fontFamily: F, position: 'relative', overflow: 'hidden' }}>
       <StarField />
+      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', animation: 'gameOverPulse 2s ease-in-out infinite' }} />
       <div style={{ position: 'relative', width: '100%', maxWidth: '420px', textAlign: 'center' }}>
         <div style={{ fontFamily: PIXEL, fontSize: 'clamp(18px,5vw,24px)', color: RED, marginBottom: '1.3rem', animation: 'pulse 2.4s ease-in-out infinite' }}>✕</div>
-        <div style={{ fontFamily: PIXEL, fontSize: 'clamp(0.8rem,4vw,1.4rem)', color: RED, textShadow: '0 0 20px rgba(255,49,49,0.6)', letterSpacing: '1px', lineHeight: '1.6' }}>GAME OVER</div>
-        <div style={{ fontFamily: PIXEL, fontSize: '7px', color: GOLD, marginTop: '1.1rem', lineHeight: '1.9', letterSpacing: '0.5px' }}>{realm?.name || ''}</div>
-        <div style={{ fontFamily: PIXEL, fontSize: '6px', color: '#888', marginTop: '0.85rem', letterSpacing: '0.5px' }}>{answered} ANSWERED · {xp} XP</div>
+        <div style={{ fontFamily: PIXEL, fontSize: 'clamp(0.8rem,4vw,1.4rem)', color: RED, textShadow: '0 0 20px rgba(255,49,49,0.6)', letterSpacing: '1px', lineHeight: '1.6', animation: 'gameOverShake 0.6s ease-out' }}>GAME OVER</div>
+        <div style={{ fontFamily: PIXEL, fontSize: '9px', color: GOLD, marginTop: '1.1rem', lineHeight: '1.9', letterSpacing: '0.5px' }}>{realm?.name || ''}</div>
+        <div style={{ fontFamily: PIXEL, fontSize: '9px', color: '#999', marginTop: '0.85rem', letterSpacing: '0.5px', lineHeight: '1.8' }}>{sessionScore?.c ?? 0} / {answered} · {acc}% · {xp} XP</div>
         <div style={{ height: '1px', background: 'rgba(212,175,55,0.15)', width: '100%', margin: '24px 0' }} />
         <p style={{ fontFamily: F, fontStyle: 'italic', fontSize: '16px', color: GOLD, lineHeight: '1.7', maxWidth: '400px', margin: '0 auto' }}>
           Through darkness the initiate discovers what light truly is

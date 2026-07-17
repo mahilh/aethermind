@@ -103,6 +103,18 @@ input  { font-family:var(--font-serif); }
   100% { transform: rotateY(0deg); }
 }
 
+/* Game Over: one-shot shake on the heading + a slow red heartbeat overlay */
+@keyframes gameOverShake {
+  0%,100%     { transform: translateX(0); }
+  10%,50%,90% { transform: translateX(-6px); }
+  20%,40%,60%,80% { transform: translateX(6px); }
+  30%,70%     { transform: translateX(-3px); }
+}
+@keyframes gameOverPulse {
+  0%,100% { background: rgba(255,49,49,0); }
+  50%     { background: rgba(255,49,49,0.045); }
+}
+
 /* Gold shimmer sheen for XP progress bars */
 @keyframes shimmer {
   0%   { background-position: 200% center; }
