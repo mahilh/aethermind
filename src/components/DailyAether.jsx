@@ -183,7 +183,7 @@ export default function DailyAether({ nav }){
         <span style={{fontFamily:PIXEL,fontSize:'9px',color:MUTED,letterSpacing:'1px'}}>{dailyLabel()}</span>
       </div>
       {/* progress dots */}
-      <div style={{display:'flex',gap:'8px',justifyContent:'center',marginBottom:'1.8rem'}}>
+      <div role="img" aria-label={`Question ${idx+1} of ${questions.length}`} style={{display:'flex',gap:'8px',justifyContent:'center',marginBottom:'1.8rem'}}>
         {questions.map((_,i)=>{
           const state = i<results.length ? (results[i]?'done-ok':'done-no') : (i===idx?'now':'todo')
           const bg = state==='done-ok'?'#39FF14':state==='done-no'?'#FF3131':state==='now'?GOLD:'rgba(212,175,55,0.2)'
