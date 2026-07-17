@@ -341,7 +341,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
           {/* Realm Gauntlet progress (Q x / 10) */}
           {isGauntlet&&<div style={{marginBottom:'1rem'}}>
             <div style={{display:'flex',justifyContent:'flex-end',marginBottom:'0.4rem'}}>
-              <span style={{fontFamily:PIXEL,fontSize:'7px',color:'#D4AF37',letterSpacing:'0.5px'}}>Q {Math.min(gauntletCount+1,10)} / 10</span>
+              <span style={{fontFamily:PIXEL,fontSize:'9px',color:'#D4AF37',letterSpacing:'0.5px'}}>Q {Math.min(gauntletCount+1,10)} / 10</span>
             </div>
             <div style={{height:'3px',background:'rgba(255,255,255,0.07)',borderRadius:'3px',overflow:'hidden'}}>
               <div style={{height:'100%',background:'#D4AF37',borderRadius:'3px',width:`${Math.min(gauntletCount,10)/10*100}%`,transition:'width 0.4s ease'}}/>
@@ -350,7 +350,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
           {/* Speed Oracle timer: gold -> amber -> red urgency, pulse under 5s */}
           {isSpeed&&<div style={{marginBottom:'1rem'}}>
             <div style={{display:'flex',justifyContent:'flex-end',marginBottom:'0.4rem'}}>
-              <span style={{fontFamily:PIXEL,fontSize:'9px',color:timeLeft<10?'#FF3131':'#D4AF37',letterSpacing:'0.5px',animation:timeLeft<5?'timerPulse 0.5s ease-in-out infinite':undefined}}>{fmtTime(timeLeft)}</span>
+              <span style={{fontFamily:PIXEL,fontSize:'9px',color:timeLeft<10?'#FF3131':timeLeft<=20?'#F59E0B':'#D4AF37',letterSpacing:'0.5px',animation:timeLeft<5?'timerPulse 0.5s ease-in-out infinite':undefined}}>{fmtTime(timeLeft)}</span>
             </div>
             <div style={{height:'6px',background:'rgba(255,255,255,0.07)',borderRadius:'3px',overflow:'hidden'}}>
               <div ref={barRef} style={{height:'100%',background:timeLeft>20?'#D4AF37':timeLeft>=10?'#F59E0B':'#FF3131',borderRadius:'3px',animation:timeLeft<5?'timerPulse 0.5s ease-in-out infinite':undefined}}/>
