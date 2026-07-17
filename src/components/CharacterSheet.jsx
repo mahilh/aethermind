@@ -36,8 +36,13 @@ export default function CharacterSheet({ stats, onBack }) {
             <div style={{height:'100%',borderRadius:'3px',background:'linear-gradient(90deg,#7B2FBE,#D4AF37,#F0C040,#D4AF37,#7B2FBE)',backgroundSize:'200% 100%',animation:'shimmer 3s linear infinite',width:xpPct+'%',transition:'width 0.6s ease'}}/>
           </div>
           <div style={{fontSize:'0.62rem',color:'rgba(232,217,192,0.28)',marginTop:'0.38rem'}}>{stats.xp} / {stats.xpToNext} XP</div>
-          {maxStreak>0&&<div style={{marginTop:'0.7rem',fontFamily:PIXEL,fontSize:'9px',color:'#F59E0B',letterSpacing:'0.5px'}}>BEST STREAK: {maxStreak}</div>}
         </div>
+        {/* Best streak: session high with tier label, mirrors the quiz and leaderboard badge */}
+        {maxStreak>0&&<div style={{...card,marginBottom:'1.2rem',textAlign:'center',border:'1px solid rgba(245,158,11,0.3)',background:'rgba(245,158,11,0.05)'}}>
+          <div style={{fontFamily:PIXEL,fontSize:'9px',color:'#F59E0B',letterSpacing:'0.1em',marginBottom:'0.7rem'}}>BEST STREAK</div>
+          <div style={{fontFamily:PIXEL,fontSize:'1.6rem',color:'#F59E0B',lineHeight:1,textShadow:'0 0 12px rgba(245,158,11,0.5)'}}>{maxStreak}</div>
+          <div style={{fontFamily:F,fontSize:'0.72rem',fontStyle:'italic',color:'rgba(245,158,11,0.65)',letterSpacing:'0.05em',marginTop:'0.55rem'}}>{maxStreak>=7?'INFERNO':maxStreak>=5?'ON FIRE':maxStreak>=3?'STREAK':'answers in a row'}</div>
+        </div>}
         {/* Attributes */}
         <div style={{...card,marginBottom:'1.2rem'}}>
           <div style={{fontSize:'0.62rem',letterSpacing:'0.2em',color:MUTED,marginBottom:'1.05rem'}}>ATTRIBUTES</div>
