@@ -47,10 +47,16 @@ export default function GauntletComplete({ realm, sessionScore, onForgeAgain, on
     <div style={{ minHeight: '100vh', background: '#04040A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', fontFamily: F, position: 'relative', overflow: 'hidden' }}>
       <StarField />
       <div style={{ position: 'relative', width: '100%', maxWidth: '420px', textAlign: 'center' }}>
-        <div style={{ fontFamily: PIXEL, fontSize: 'clamp(18px,5vw,24px)', color: GREEN, marginBottom: '1.3rem', animation: 'pulse 2.4s ease-in-out infinite' }}>✓</div>
+        <div style={{ position: 'relative', display: 'inline-block', marginBottom: '1.3rem' }}>
+          {[0, 0.2, 0.4].map(delay => (
+            <div key={delay} aria-hidden="true" style={{ position: 'absolute', top: '50%', left: '50%', width: '20px', height: '20px', borderRadius: '50%', transform: 'translate(-50%,-50%)', border: `2px solid ${GOLD}`, animation: `goldPulseRing 1.2s ease-out ${delay}s infinite`, pointerEvents: 'none' }} />
+          ))}
+          <div style={{ fontFamily: PIXEL, fontSize: 'clamp(18px,5vw,24px)', color: GREEN, position: 'relative', animation: 'pulse 2.4s ease-in-out infinite' }}>✓</div>
+        </div>
         <div style={{ fontFamily: PIXEL, fontSize: 'clamp(11px,3.2vw,16px)', color: GREEN, textShadow: '0 0 20px rgba(57,255,20,0.55)', letterSpacing: '1px', lineHeight: '1.7' }}>GAUNTLET COMPLETE</div>
-        <div style={{ fontFamily: PIXEL, fontSize: '7px', color: GOLD, marginTop: '1.1rem', lineHeight: '1.9', letterSpacing: '0.5px' }}>{realm?.name || ''}</div>
-        <div style={{ fontFamily: PIXEL, fontSize: '6px', color: '#888', marginTop: '0.85rem', letterSpacing: '0.5px' }}>{c} / {t} · {acc}% ACCURACY</div>
+        <div style={{ fontFamily: PIXEL, fontSize: '9px', color: GOLD, marginTop: '1.1rem', lineHeight: '1.9', letterSpacing: '0.5px' }}>{realm?.name || ''}</div>
+        <div style={{ fontFamily: PIXEL, fontSize: '9px', color: '#999', marginTop: '0.85rem', letterSpacing: '0.5px', lineHeight: '1.8' }}>{c} / {t} · {acc}% ACCURACY</div>
+        <div style={{ fontFamily: PIXEL, fontSize: '11px', color: '#F59E0B', marginTop: '0.7rem', letterSpacing: '0.5px', textShadow: '0 0 10px rgba(245,158,11,0.4)' }}>{xp} XP</div>
         <div style={{ height: '1px', background: 'rgba(212,175,55,0.15)', width: '100%', margin: '24px 0' }} />
         <p style={{ fontFamily: F, fontStyle: 'italic', fontSize: '16px', color: GOLD, lineHeight: '1.7', maxWidth: '400px', margin: '0 auto' }}>
           The initiate who endures ten trials has earned the sight.
