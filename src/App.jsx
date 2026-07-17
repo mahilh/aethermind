@@ -14,6 +14,16 @@ import WisdomVault from './components/WisdomVault'
 import Leaderboard from './components/Leaderboard'
 import DailyAether from './components/DailyAether'
 
+// ── Hash-based routing map ────────────────────────────────────
+// Mirror the store `screen` into window.location.hash so the browser Back/Forward buttons move
+// between screens instead of leaving the app, and a shared link like /#daily deep-links straight in.
+// Hash routing (not react-router) is deliberate: `screen` lives in T2's store and the whole
+// question-load flow is wired through setScreen, so a full router swap would be cross-lane and
+// high-risk on a live auto-deploy. Hash sync stays in this file, needs no dependency and no
+// server rewrite (the hash never reaches Vercel, so /#daily can never 404).
+const SCREEN_TO_HASH = { home:'', 'mode-select':'mode', 'realm-select':'realm', quiz:'quiz', daily:'daily', character:'character', cards:'vault', leaderboard:'leaderboard' }
+const HASH_TO_SCREEN = { '':'home', home:'home', mode:'mode-select', realm:'realm-select', quiz:'quiz', daily:'daily', character:'character', vault:'cards', leaderboard:'leaderboard' }
+
 export default function App() {
   const {
     screen, realm, question, loading, error, picked, revealed,
@@ -130,6 +140,44 @@ export default function App() {
     })
     return () => unsubscribeLeaderboard(ch)
   }, [screen, setLeaderboard])
+
+  // ── Hash routing ──────────────────────────────────────────────
+  // hashReady gates the screen->hash sync until after the one-time deep-link adopt below, so the
+  // sync can never clobber an incoming /#daily before it is read (this ordering is also what makes
+  // the flow safe under StrictMode's double-invoke of effects in dev).
+  const [hashReady, setHashReady] = useState(false)
+
+  // Once on mount: adopt a deep-link hash as the screen. Quiz is excluded because it needs a realm
+  // loaded through realm-select, so a bare /#quiz falls back to home via the sync effect.
+  useEffect(() => {
+    const h = window.location.hash.replace(/^#/, '')
+    const deep = HASH_TO_SCREEN[h]
+    if (deep && deep !== 'quiz' && deep !== useGameStore.getState().screen) setScreen(deep)
+    setHashReady(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Screen -> hash: setting the hash pushes a history entry, so Back returns to the prior screen.
+  useEffect(() => {
+    if (!hashReady) return
+    const target = SCREEN_TO_HASH[screen] ?? ''
+    const current = window.location.hash.replace(/^#/, '')
+    if (current !== target) window.location.hash = target
+  }, [screen, hashReady])
+
+  // Hash -> screen on Back/Forward. Guard quiz (no realm -> realm-select). The `next === screen`
+  // check makes our own programmatic hash writes above no-ops, so the two effects never loop.
+  useEffect(() => {
+    const onHash = () => {
+      const next = HASH_TO_SCREEN[window.location.hash.replace(/^#/, '')] ?? 'home'
+      const s = useGameStore.getState()
+      if (next === s.screen) return
+      if (next === 'quiz' && !s.realm) { setScreen('realm-select'); return }
+      setScreen(next)
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [setScreen])
 
   // ── Navigation helper ─────────────────────────────────────────
   const nav = {
