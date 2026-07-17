@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react'
 import { STARS, ATTRS } from '../lib/constants'
 import { useGameStore } from '../store/useGameStore'
+import { getTodayResult, dailyLabel } from './DailyAether'
 
 // Rotating esoteric wisdom (zero em dashes, commas only)
 const QUOTES = [
@@ -32,9 +33,10 @@ function Stars() {
   )
 }
 
-export default function HomeScreen({ stats, playerName, onBegin }) {
+export default function HomeScreen({ stats, playerName, onBegin, onDaily }) {
   const { setPlayerName } = useGameStore()
   const [name, setName] = useState(playerName || '')
+  const dailyDone = getTodayResult()   // null until today's Daily Aether is completed
   const acc = stats.answered ? Math.round(stats.correct/stats.answered*100) : 0
   const xpPct = Math.min(100, (stats.xp/stats.xpToNext)*100)
   const [quoteIdx, setQuoteIdx] = useState(0)
@@ -49,6 +51,7 @@ export default function HomeScreen({ stats, playerName, onBegin }) {
   }, [])
 
   const F = '"EB Garamond","Georgia",serif'
+  const PIXEL = "'Press Start 2P','Courier New',monospace"
   const TEXT = '#E8D9C0'
   const MUTED = 'rgba(232,217,192,0.4)'
 
@@ -90,6 +93,17 @@ export default function HomeScreen({ stats, playerName, onBegin }) {
           placeholder="Enter your name (optional)"
           style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(212,175,55,0.3)',borderRadius:'8px',padding:'0.75rem 1rem',color:TEXT,fontSize:'0.9rem',marginBottom:'1.25rem',outline:'none',textAlign:'center'}}
         />
+        {/* Daily Aether: same 5 questions for everyone each day, shareable emoji grid */}
+        <button onClick={onDaily} aria-label="Daily Aether challenge"
+          style={{width:'100%',background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.45)',borderRadius:'10px',padding:'0.8rem 1rem',marginBottom:'0.9rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between',gap:'0.6rem',minHeight:'44px',transition:'border-color 0.2s,box-shadow 0.2s'}}
+          onMouseEnter={e=>{e.currentTarget.style.borderColor='#D4AF37';e.currentTarget.style.boxShadow='0 0 20px rgba(212,175,55,0.25)'}}
+          onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(212,175,55,0.45)';e.currentTarget.style.boxShadow='none'}}>
+          <span style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:'4px'}}>
+            <span style={{fontFamily:PIXEL,fontSize:'11px',color:'#D4AF37',letterSpacing:'1.5px'}}>DAILY AETHER</span>
+            <span style={{fontSize:'0.66rem',color:'rgba(232,217,192,0.5)',letterSpacing:'0.05em'}}>{dailyDone ? 'Ascended today, come back tomorrow' : `TODAY'S CHALLENGE · ${dailyLabel()}`}</span>
+          </span>
+          <span style={{fontFamily:PIXEL,fontSize:'12px',color:dailyDone?'#39FF14':'#D4AF37',whiteSpace:'nowrap'}}>{dailyDone ? `${dailyDone.score}/5 ✓` : '▶'}</span>
+        </button>
         {/* Begin (gentle bob on a wrapper so it does not fight the hover scale on the button) */}
         <div style={{animation:'enterBob 3s ease-in-out infinite'}}>
           <button onClick={handleBegin} style={{background:'linear-gradient(135deg,#7B2FBE,#D4AF37)',border:'none',borderRadius:'10px',padding:'1rem 3rem',fontSize:'0.98rem',color:'#050510',fontWeight:'bold',cursor:'pointer',fontFamily:F,letterSpacing:'0.13em',boxShadow:'0 0 40px #9B59B640',transition:'transform 0.2s,box-shadow 0.2s',width:'100%'}}

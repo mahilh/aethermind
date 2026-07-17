@@ -12,6 +12,7 @@ import QuizScreen from './components/QuizScreen'
 import CharacterSheet from './components/CharacterSheet'
 import WisdomVault from './components/WisdomVault'
 import Leaderboard from './components/Leaderboard'
+import DailyAether from './components/DailyAether'
 
 export default function App() {
   const {
@@ -145,7 +146,8 @@ export default function App() {
   const uniqueCardCount = new Set(learningCards.map(c => c.question)).size
 
   // ── Screen routing ────────────────────────────────────────────
-  if (screen === 'home')         return <HomeScreen stats={stats} playerName={playerName} onBegin={() => setScreen('mode-select')} />
+  if (screen === 'home')         return <HomeScreen stats={stats} playerName={playerName} onBegin={() => setScreen('mode-select')} onDaily={() => setScreen('daily')} />
+  if (screen === 'daily')        return <DailyAether nav={nav} />
   if (screen === 'mode-select')  return <ModeSelect onModeSelect={handleModeSelect} nav={nav} />
   if (screen === 'realm-select') return <RealmSelect stats={stats} learningCardsCount={uniqueCardCount} onPick={handleSelectRealm} nav={nav} />
   if (screen === 'quiz')         return <QuizScreen realm={realm} question={question} loading={loading} error={error} picked={picked} revealed={revealed} sessionScore={sessionScore} stats={stats} learningCardsCount={uniqueCardCount} onAnswer={handleAnswer} onNext={handleNext} onRetry={() => { setSeenIds([]); pickQuestion(realmQuestions, stats, realm, []) }} onSessionEnd={handleSessionEnd} nav={nav} />
