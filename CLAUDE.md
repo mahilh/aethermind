@@ -7,7 +7,7 @@ A live real-time esoteric consciousness trivia RPG. Players pick from 12 realms 
 
 ## LIVE STATE (2026-07-17 Session 9 · T2 verified via aethermind MCP + live endpoint probes)
 CONFIRMED (DB / storage / API, verified this session):
-- Site: aethermind-five.vercel.app. DB: 118 questions (010 applied, 120 to 118), 12 realms. Leaderboard am_scores: 2 rows (mahil, xp 250 / level 6 / max_streak 15; plus an 'overdrive-test' 0-XP probe). Migration 008 cleanup mostly done; the overdrive-test probe row still wants deleting before the Austin launch.
+- Site: aethermind-five.vercel.app. DB: 118 questions (010 applied, 120 to 118), 12 realms. Leaderboard am_scores: down to 1 real row (mahil, xp 250 / level 6 / max_streak 15) by session end; test/probe rows (e.g. 'overdrive-test') come and go, so delete any non-mahil row before the Austin launch.
 - Leaderboard writes WORK: POST /api/save-score returns {"ok":true} (fixed via 005 service_role GRANT, raw fetch to PostgREST).
 - 004 lockdown APPLIED: anon SELECT on am_scores, counter-only UPDATE on am_questions.
 - Em dashes: 0 in DB (006 applied, verified across all 120 questions).
