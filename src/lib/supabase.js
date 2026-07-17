@@ -91,9 +91,14 @@ export async function saveScore(playerName, stats) {
 
 export async function getLeaderboard(period = 'all') {
   if (!supabase) return []
+  // Rank by level first, then xp within a level. xp is stored PER LEVEL (it wraps to 0 on
+  // level-up), so ordering by xp alone lets a low-level grinder (level 2, xp 90) outrank a
+  // high-level player (level 40, xp 10). level DESC then xp DESC rewards progression. Applied
+  // on the base query, so both the all-time and the 'week' branch inherit it.
   let query = supabase
     .from('am_scores')
     .select('*')
+    .order('level', { ascending: false })
     .order('xp', { ascending: false })
     .limit(20)
   if (period === 'week') {
