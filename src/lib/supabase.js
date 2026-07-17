@@ -40,6 +40,30 @@ export async function fetchMixedQuestion(level = 1) {
   return data[Math.floor(Math.random() * data.length)]
 }
 
+// Server-side answer check (used once the client stops trusting the shipped correct_idx). Pass the
+// am_questions uuid (question.db_id) and the picked option index; the serverless route compares
+// against the stored correct_idx and returns { isCorrect, correctIdx }, or null on failure so the
+// caller can fall back. ADDITIVE: correct_idx still ships in fetchQuestionsForRealm today. The plan
+// is to wire this into QuizScreen + DailyAether first, THEN drop correct_idx from the SELECT.
+export async function checkAnswer(questionId, pickedIdx) {
+  try {
+    const res = await fetch('/api/check-answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ questionId, pickedIdx }),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      console.error('[AetherMind] checkAnswer:', err.error || res.status)
+      return null
+    }
+    return await res.json()
+  } catch (err) {
+    console.error('[AetherMind] checkAnswer:', err.message)
+    return null
+  }
+}
+
 // ── LEADERBOARD ───────────────────────────────────────────────
 
 // Writes go through the service-role serverless route (/api/save-score), never
