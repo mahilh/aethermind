@@ -177,7 +177,8 @@ export default function App() {
   // check makes our own programmatic hash writes above no-ops, so the two effects never loop.
   useEffect(() => {
     const onHash = () => {
-      const next = HASH_TO_SCREEN[window.location.hash.replace(/^#/, '')] ?? 'home'
+      const next = HASH_TO_SCREEN[window.location.hash.replace(/^#/, '')]
+      if (!next) return   // unknown fragment (e.g. the #main-content skip-link target): not a screen, ignore
       const s = useGameStore.getState()
       if (next === s.screen) return
       if (next === 'quiz' && !s.realm) { setScreen('realm-select'); return }
@@ -202,13 +203,26 @@ export default function App() {
   const uniqueCardCount = new Set(learningCards.map(c => c.question)).size
 
   // ── Screen routing ────────────────────────────────────────────
-  if (screen === 'home')         return <HomeScreen stats={stats} playerName={playerName} onBegin={() => setScreen('mode-select')} onDaily={() => setScreen('daily')} />
-  if (screen === 'daily')        return <DailyAether nav={nav} />
-  if (screen === 'mode-select')  return <ModeSelect onModeSelect={handleModeSelect} nav={nav} />
-  if (screen === 'realm-select') return <RealmSelect stats={stats} learningCardsCount={uniqueCardCount} onPick={handleSelectRealm} nav={nav} />
-  if (screen === 'quiz')         return <QuizScreen realm={realm} question={question} loading={loading} error={error} picked={picked} revealed={revealed} sessionScore={sessionScore} stats={stats} learningCardsCount={uniqueCardCount} onAnswer={handleAnswer} onNext={handleNext} onRetry={() => { setSeenIds([]); pickQuestion(realmQuestions, stats, realm, []) }} onSessionEnd={handleSessionEnd} nav={nav} />
-  if (screen === 'character')    return <CharacterSheet stats={stats} onBack={() => setScreen(realm ? 'quiz' : 'realm-select')} />
-  if (screen === 'cards')        return <WisdomVault cards={learningCards} cardOpen={cardOpen} onToggle={setCardOpen} onBack={() => setScreen(realm ? 'quiz' : 'realm-select')} />
-  if (screen === 'leaderboard')  return <Leaderboard leaderboard={leaderboard} playerName={playerName} onBack={() => setScreen('realm-select')} />
-  return null
+  // Every screen renders inside a <main> landmark, fronted by a skip-to-content link (revealed on
+  // keyboard focus) so screen-reader / keyboard users can jump past the decorative star field and
+  // nav straight to the screen content.
+  let screenEl = null
+  if (screen === 'home')              screenEl = <HomeScreen stats={stats} playerName={playerName} onBegin={() => setScreen('mode-select')} onDaily={() => setScreen('daily')} />
+  else if (screen === 'daily')        screenEl = <DailyAether nav={nav} />
+  else if (screen === 'mode-select')  screenEl = <ModeSelect onModeSelect={handleModeSelect} nav={nav} />
+  else if (screen === 'realm-select') screenEl = <RealmSelect stats={stats} learningCardsCount={uniqueCardCount} onPick={handleSelectRealm} nav={nav} />
+  else if (screen === 'quiz')         screenEl = <QuizScreen realm={realm} question={question} loading={loading} error={error} picked={picked} revealed={revealed} sessionScore={sessionScore} stats={stats} learningCardsCount={uniqueCardCount} onAnswer={handleAnswer} onNext={handleNext} onRetry={() => { setSeenIds([]); pickQuestion(realmQuestions, stats, realm, []) }} onSessionEnd={handleSessionEnd} nav={nav} />
+  else if (screen === 'character')    screenEl = <CharacterSheet stats={stats} onBack={() => setScreen(realm ? 'quiz' : 'realm-select')} />
+  else if (screen === 'cards')        screenEl = <WisdomVault cards={learningCards} cardOpen={cardOpen} onToggle={setCardOpen} onBack={() => setScreen(realm ? 'quiz' : 'realm-select')} />
+  else if (screen === 'leaderboard')  screenEl = <Leaderboard leaderboard={leaderboard} playerName={playerName} onBack={() => setScreen('realm-select')} />
+
+  return (
+    <>
+      {/* CSS :focus (not JS onFocus) reveals this so an App re-render can never reset the inline style.
+          onClick focuses <main> directly and preventDefault keeps the hash clean so the routing
+          hashchange listener never sees a #main-content fragment. */}
+      <a href="#main-content" className="skip-link" onClick={(e) => { e.preventDefault(); document.getElementById('main-content')?.focus() }}>Skip to main content</a>
+      <main id="main-content" tabIndex={-1} style={{outline:'none'}}>{screenEl}</main>
+    </>
+  )
 }

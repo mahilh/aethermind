@@ -269,7 +269,7 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
         {/* Realm hero banner (image behind a top-light/bottom-dark gradient, name bottom-left) */}
         <div style={{width:'100%',height:'120px',borderRadius:'10px',overflow:'hidden',marginBottom:'12px',position:'relative',flexShrink:0,backgroundImage:realm?.imageUrl?`url(${realm.imageUrl})`:'linear-gradient(135deg,#0A0A1A 0%,#150A2B 100%)',backgroundSize:'cover',backgroundPosition:'center'}}>
           <div aria-hidden="true" style={{position:'absolute',inset:0,background:'linear-gradient(to bottom,rgba(4,4,10,0.2),rgba(4,4,10,0.9))'}}/>
-          <span style={{position:'absolute',bottom:'10px',left:'14px',fontFamily:'"Press Start 2P",monospace',fontSize:'9px',color:'#D4AF37',letterSpacing:'2px',zIndex:1}}>{realm?.name?.toUpperCase()}</span>
+          <h1 style={{position:'absolute',bottom:'10px',left:'14px',fontFamily:'"Press Start 2P",monospace',fontSize:'9px',color:'#D4AF37',letterSpacing:'2px',zIndex:1,margin:0,fontWeight:'normal'}}>{realm?.name?.toUpperCase()}</h1>
         </div>
         {/* Session stats (streak badge slots between SESSION and TOTAL XP when currentStreak >= 3) */}
         <div style={{display:'flex',gap:'0.7rem',marginBottom:'1.2rem'}}>
@@ -370,10 +370,11 @@ export default function QuizScreen({ realm, question, loading, error, picked, re
               />
             </div>
           )}
-          {/* Question text (Blind Seer: subtle purple tint replaces the knowledge cue) */}
-          <div style={{background:gameMode==='blind'?'rgba(123,47,190,0.06)':'rgba(232,217,192,0.03)',border:'1px solid rgba(212,175,55,0.08)',borderRadius:'10px',padding:'20px 22px',marginBottom:'1rem',fontFamily:'var(--font-question)',fontSize:'22px',lineHeight:'1.8',letterSpacing:'0.02em'}}>
+          {/* Question text (Blind Seer: subtle purple tint replaces the knowledge cue).
+              <h2> under the realm <h1>: fontWeight/margin normalized so it looks identical. */}
+          <h2 style={{background:gameMode==='blind'?'rgba(123,47,190,0.06)':'rgba(232,217,192,0.03)',border:'1px solid rgba(212,175,55,0.08)',borderRadius:'10px',padding:'20px 22px',margin:'0 0 1rem 0',fontFamily:'var(--font-question)',fontSize:'22px',fontWeight:'normal',lineHeight:'1.8',letterSpacing:'0.02em'}}>
             {question.question}
-          </div>
+          </h2>
           {/* Options */}
           <div style={{display:'flex',flexDirection:'column',gap:'0.55rem',marginBottom:'1.2rem'}}>
             {question.options.map((opt,i)=>{

@@ -14,6 +14,16 @@
 }
 
 * { box-sizing: border-box; }
+
+/* Skip-to-content link: off-screen until keyboard focus, then slides in at the top-left. Pure CSS
+   :focus (never a JS handler) so no React re-render can reset it. 9px is the Press Start 2P floor. */
+.skip-link {
+  position: absolute; top: -100px; left: 16px; z-index: 9999;
+  background: #D4AF37; color: #04040A; padding: 8px 16px;
+  font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 9px; letter-spacing: 0.05em;
+  text-decoration: none; border-radius: 0 0 6px 6px; transition: top 0.12s ease;
+}
+.skip-link:focus { top: 0; }
 /* Cinzel is the primary reading font (CLAUDE.md font system): it cascades from body so any
    text that does not set its own family inherits Cinzel. EB Garamond (--font-serif) stays as the
    explicit choice for buttons/inputs and legacy component roots; Press Start 2P stays overridden. */
