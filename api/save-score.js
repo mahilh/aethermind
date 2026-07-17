@@ -67,6 +67,17 @@ export default async function handler(req, res) {
   const correct  = Math.min(rawCorrect, 99999)
   const answered = Math.min(rawAnswered, 99999)
 
+  // Curve-correct plausibility ceiling. Restored from 218df9f; the 7b1c557 rewrite dropped it and
+  // left only the flat Math.min(rawXp, 99999) clamp (kept above as a hard backstop). xp is stored
+  // PER LEVEL (it wraps to 0 on level-up), so the max legitimate in-level xp is bounded by the
+  // xpToNext curve (~100*1.65^(level-1): ~2030 at L7, ~3350 at L8). 200*1.7^level+500 sits safely
+  // above that at every level (L2=1078, L7=8707, L8=14452), so it never false-rejects a genuine
+  // near-level-up score while still catching grossly inflated cheats.
+  if (xp > 200 * Math.pow(1.7, level) + 500) {
+    console.warn('[AetherMind API] save-score: implausible xp for level', { xp, level })
+    return res.status(400).json({ error: 'Implausible score' })
+  }
+
   if (correct > answered) {
     return res.status(400).json({ error: 'correct cannot exceed answered' })
   }
@@ -109,7 +120,7 @@ export default async function handler(req, res) {
     const existing = await checkResp.json()
     const existingMaxStreak = existing?.[0]?.max_streak ?? 0
 
-    // GREATEST computed server-side — not relying on DB trigger
+    // GREATEST computed server-side, not relying on DB trigger
     const finalMaxStreak = Math.max(existingMaxStreak, maxStreak)
 
     const payload = {
