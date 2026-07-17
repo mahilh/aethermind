@@ -14,7 +14,10 @@
 }
 
 * { box-sizing: border-box; }
-body { margin:0; background:var(--color-bg); color:var(--color-text); font-family:var(--font-serif); -webkit-font-smoothing:antialiased; }
+/* Cinzel is the primary reading font (CLAUDE.md font system): it cascades from body so any
+   text that does not set its own family inherits Cinzel. EB Garamond (--font-serif) stays as the
+   explicit choice for buttons/inputs and legacy component roots; Press Start 2P stays overridden. */
+body { margin:0; background:var(--color-bg); color:var(--color-text); font-family:'Cinzel','Times New Roman',Georgia,serif; -webkit-font-smoothing:antialiased; }
 button { font-family:var(--font-serif); }
 input  { font-family:var(--font-serif); }
 
