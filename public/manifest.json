@@ -1,0 +1,16 @@
+{
+  "name": "AetherMind: Esoteric Consciousness Trivia",
+  "short_name": "AetherMind",
+  "description": "Esoteric Consciousness Trivia RPG. 12 Realms of ancient wisdom, quantum physics, and channeled knowledge.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#04040A",
+  "theme_color": "#04040A",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

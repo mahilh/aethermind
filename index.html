@@ -22,6 +22,17 @@
     <meta name="twitter:description" content="12 Realms of esoteric knowledge. 5 modes. Live leaderboard." />
     <meta name="twitter:image" content="https://aethermind-five.vercel.app/og-image.png" />
     <link rel="canonical" href="https://aethermind-five.vercel.app" />
+
+    <!-- PWA: installable to the home screen on iOS and Android (theme kept dark to match the
+         immersive cosmic UI; flip theme-color/manifest theme_color to gold #D4AF37 if preferred) -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#04040A" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AetherMind" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Preload the Cinzel latin woff2 so the reading font is cached before the quiz renders,
