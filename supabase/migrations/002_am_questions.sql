@@ -35,7 +35,7 @@ drop policy if exists "am_q_public_update" on public.am_questions;
 create policy "am_q_public_read"   on public.am_questions for select using (true);
 create policy "am_q_public_update" on public.am_questions for update using (true);
 
--- Realtime (optional — useful for live question updates)
+-- Realtime (optional, useful for live question updates)
 do $$ begin
   if not exists (
     select 1 from pg_publication_tables
