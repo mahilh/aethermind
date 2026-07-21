@@ -6,3 +6,5 @@ dist/
 *.log
 .claude/comms/tomorrow.md
 .vercel/
+.playwright-mcp/
+scripts/__pycache__/
